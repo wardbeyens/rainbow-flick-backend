@@ -38,11 +38,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'api loaded succesfully' });
 });
 
-require('./app/routes/role.routes')(app);
+// First User, other tables may depend on this table
+require('./app/routes/user.routes')(app);
+
 // require("./app/routes/article.routes")(app);
 // require("./app/routes/articlestatus.routes")(app);
 // require("./app/routes/tag.routes")(app);
-require('./app/routes/user.routes')(app);
+
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 

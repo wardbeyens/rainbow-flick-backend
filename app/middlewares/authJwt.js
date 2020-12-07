@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config.js');
 const db = require('../models');
-const roleIDs = require('../const/roleIDs.js');
 const User = db.users;
 
 extractToken = (authField) => {

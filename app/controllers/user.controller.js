@@ -1,13 +1,10 @@
 const config = require('../config/auth.config');
 const db = require('../models');
-const roleIDs = require('../const/roleIDs');
 const User = db.users;
-const Role = db.roles;
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 const { response } = require('express');
-const { user } = require('../const/roleIDs');
 
 // Create and Save a new user
 exports.create = (req, res) => {
