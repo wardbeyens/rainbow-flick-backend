@@ -1,0 +1,22 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.6.8 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: "rainbow-flick-backend-app" #Must be unique in Heroku
+          heroku_email: "wardbeyens99@gmail.com"
+        env:
+          HD_DB_HOST: ${{secrets.DB_HOST}}
+          HD_SECRET: ${{secrets.HD_SECRET}}
+          HD_PORT: 80
+          procfile: "web: npm start"
