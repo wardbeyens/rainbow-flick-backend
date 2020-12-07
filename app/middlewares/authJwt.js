@@ -56,7 +56,6 @@ verifyPermission = (permission) => {
       }
       User.findById(decoded.id).then((user) => {
         req.authUser = user;
-        console.log('verifyPermission:', permission, 'Permissions: ', user.permissions);
         if (user.permissions.includes(permission)) {
           next();
         } else {
