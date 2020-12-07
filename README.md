@@ -9,6 +9,6 @@ Used sources:
 Instructions:
 - clone this repository
 - run "npm install"
-- run "node server.js"
+- run "npm start"
 
 "# news_app_backend" 
