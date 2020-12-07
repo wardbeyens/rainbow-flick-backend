@@ -44,7 +44,8 @@ verifyTokenIfPresent = (req, res, next) => {
   });
 };
 
-verifyPermission = (permission) => {
+//basically if admin than continue
+hasPermission = (permission) => {
   return (req, res, next) => {
     if (!isTokenPresent(req)) {
       return res.status(401).send({ message: 'No token provided!' });
@@ -66,9 +67,36 @@ verifyPermission = (permission) => {
   };
 };
 
+//basically if admin or the logged in UserID is the same as the Parameter UserID
+hasPermissionOrIsUserItself = (permission) => {
+  return (req, res, next) => {
+    if (!isTokenPresent(req)) {
+      return res.status(401).send({ message: 'No token provided!' });
+    }
+    let token = extractToken(req);
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        return res.status(403).send({ message: 'Access denied.' });
+      }
+      if (req.params.id == decoded.id) {
+        next();
+      }
+      User.findById(decoded.id).then((user) => {
+        req.authUser = user;
+        if (user.permissions.includes(permission)) {
+          next();
+        } else {
+          return res.status(403).send({ message: 'Route requires privileges' });
+        }
+      });
+    });
+  };
+};
+
 const authJwt = {
   verifyToken,
   verifyTokenIfPresent,
-  verifyPermission,
+  hasPermission,
+  hasPermissionOrIsUserItself,
 };
 module.exports = authJwt;

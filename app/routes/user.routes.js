@@ -11,15 +11,17 @@ module.exports = (app) => {
   router.post('/authenticate', users.authenticate);
 
   // Create a new admin
-  // router.post('/admin', [authJwt.verifyToken, authJwt.verifyPermission('ADMIN_CREATE')], users.createAdmin);
+  router.post('/admin', [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')], users.createAdmin);
+
+  // Retrieve all users
+  router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
 
   // Retrieve a single user with id
-  router.get('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_READ')], users.findOne);
-
+  router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);
   // router.put('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_EDIT')], users.edit);
 
   // Delete a user with id
-  router.delete('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_DELETE')], users.delete);
+  router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
 
   app.use('/api/user', router);
 };

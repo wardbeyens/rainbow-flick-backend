@@ -194,15 +194,22 @@ exports.findOne = (req, res) => {
     });
 };
 
-exports.findAuthors = (req, res) => {
-  User.find({ RoleID: roleIDs.author })
-    .then((data) => {
-      res.send(data);
+// Find all users
+exports.findAll = (req, res) => {
+  User.find({})
+    .then((users) => {
+      if (!users) return res.status(404).send({ message: 'No users found' });
+
+      var userMap = {};
+
+      users.forEach(function (user) {
+        userMap[user._id] = returnUserLimited(user);
+      });
+
+      res.send(userMap);
     })
     .catch((err) => {
-      res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving tags.',
-      });
+      res.status(500).send({ message: err.message || 'Error retrieving users' });
     });
 };
 
@@ -234,7 +241,7 @@ exports.delete = (req, res) => {
     });
 };
 
-exports.createAuthor = (req, res) => {
+exports.createAdmin = (req, res) => {
   // Validate request
   validationMessages = [];
 
