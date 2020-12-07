@@ -39,6 +39,7 @@ app.get('/', (req, res) => {
 });
 
 require('./app/routes/role.routes')(app);
+require('./app/routes/table.routes')(app);
 // require("./app/routes/article.routes")(app);
 // require("./app/routes/articlestatus.routes")(app);
 // require("./app/routes/tag.routes")(app);
