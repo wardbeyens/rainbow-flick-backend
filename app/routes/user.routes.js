@@ -21,5 +21,5 @@ module.exports = (app) => {
   // Delete a user with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_DELETE')], users.delete);
 
-  app.use('/api/User', router);
+  app.use('/api/user', router);
 };

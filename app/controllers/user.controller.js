@@ -4,7 +4,41 @@ const User = db.users;
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
-const { response } = require('express');
+
+//helper function to store user in db
+storeUserInDatabase = (user, res) => {
+  user
+    .save(user)
+    .then((data) => {
+      res.send(returnUserWithToken(data));
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || 'Some error occurred while creating the user.',
+      });
+    });
+};
+
+//helper function to create a token
+createToken = (user) => {
+  return jwt.sign({ id: user._id || user.id, permissions: user.permissions }, config.secret, {
+    expiresIn: 86400, // 24 hours
+  });
+};
+
+//helper function to return userObject
+returnUserWithToken = (data) => {
+  return {
+    id: data._id || data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    dateOfBirth: data.dateOfBirth,
+    imageURL: data.imageURL,
+    permissions: data.permissions,
+    accessToken: createToken(data),
+  };
+};
 
 // Create and Save a new user
 exports.create = (req, res) => {
@@ -49,11 +83,13 @@ exports.create = (req, res) => {
   //Last Name
   if (!req.body.dateOfBirth) {
     validationMessages.push('Birthday is required.');
-  } else if (isNaN(req.body.dateOfBirth.getTime())) {
-    // d.valueOf() could also work
-    validationMessages.push('Birthday must be a date');
+  } else {
+    dateOfBirthCastedToDate = new Date(req.body.dateOfBirth);
+    if (isNaN(dateOfBirthCastedToDate.getTime())) {
+      // d.valueOf() could also work
+      validationMessages.push('Birthday must be a date');
+    }
   }
-
   // If request not valid, return messages
   if (validationMessages.length != 0) {
     res.status(404).send({ message: validationMessages });
@@ -64,14 +100,14 @@ exports.create = (req, res) => {
     firstName: req.body.firstName,
     lastName: req.body.lastName,
     email: req.body.email,
-    dateOfBirth: req.body.dateOfBirth,
-    Password: bcrypt.hashSync(req.body.Password, 8),
+    dateOfBirth: new Date(req.body.dateOfBirth),
+    password: bcrypt.hashSync(req.body.password, 8),
   });
 
   if (req.body.imageURL) {
     user.imageURL = req.body.imageURL;
   } else {
-    user.imageURL = 'http://localhost:8080/images/placeholder.png';
+    user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
 
   User.find({
@@ -80,12 +116,56 @@ exports.create = (req, res) => {
     if (response.length == 0) {
       storeUserInDatabase(user, res);
     } else {
-      res.status(404).send({ message: `Already exists an account with emailaddress ${user.Email}.` });
+      res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
 };
 
-// Save user in the database
+exports.authenticate = (req, res) => {
+  validationMessages = [];
+
+  // Email validation
+  if (!req.body.email) {
+    validationMessages.push('Email is required.');
+  }
+
+  //Last Name
+  if (!req.body.password) {
+    validationMessages.push('Password is required.');
+  }
+
+  // If request not valid, return messages
+  if (validationMessages.length != 0) {
+    res.status(404).send({ message: validationMessages });
+  }
+  // WHY I dont know, but if there is no else the function continues
+  else {
+    User.findOne({
+      email: req.body.email,
+    })
+      .select('+password')
+      .exec((err, user) => {
+        if (err) {
+          res.status(500).send({ message: err });
+          return;
+        }
+
+        if (!user) {
+          return res.status(200).send({ error: 'Er is geen gebruiker gevonden met e-mailadres.' });
+        }
+
+        var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+
+        if (!passwordIsValid) {
+          return res.send({
+            error: 'Hey bruh, wachtwoord vergeten? Want het klopt niet eh man!',
+          });
+        }
+
+        res.status(200).send(returnUserWithToken(user));
+      });
+  }
+};
 
 // Find a single user with an id
 exports.findOne = (req, res) => {
@@ -98,50 +178,6 @@ exports.findOne = (req, res) => {
     })
     .catch((err) => {
       res.status(500).send({ message: 'Error retrieving user with id=' + id });
-    });
-};
-
-exports.authenticate = (req, res) => {
-  User.findOne({
-    Username: req.body.Username,
-  })
-    .select('+Password')
-    .exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
-
-      if (!user) {
-        return res.status(200).send({ error: 'Aanmelden mislukt' });
-      }
-
-      var passwordIsValid = bcrypt.compareSync(req.body.Password, user.Password);
-
-      if (req.body.Password == user.Password) {
-        passwordIsValid = true;
-      }
-
-      if (!passwordIsValid) {
-        return res.send({
-          error: 'Aanmelden mislukt',
-        });
-      }
-
-      var token = jwt.sign(
-        { id: user.id, isAdmin: user.RoleID == roleIDs.admin, isAuthor: user.RoleID == roleIDs.author },
-        config.secret,
-        {
-          expiresIn: 86400, // 24 hours
-        }
-      );
-
-      res.status(200).send({
-        Id: user._id,
-        Username: user.Username,
-        Email: user.Email,
-        AccessToken: token,
-      });
     });
 };
 
@@ -181,29 +217,6 @@ exports.delete = (req, res) => {
     .catch((err) => {
       res.status(500).send({
         message: 'Could not delete user with id=' + id,
-      });
-    });
-};
-
-storeUserInDatabase = (user, res) => {
-  user
-    .save(user)
-    .then((data) => {
-      var token = jwt.sign({ id: user.id, permissions: user.permissions }, config.secret, {
-        expiresIn: 86400, // 24 hours
-      });
-      res.send({
-        id: data._id,
-        firstName: data.FirstName,
-        lastName: data.LastName,
-        email: data.email,
-        dateOfBirth: data.dateOfBirth,
-        AccessToken: token,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || 'Some error occurred while creating the user.',
       });
     });
 };
