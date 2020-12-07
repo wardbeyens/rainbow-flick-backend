@@ -15,9 +15,7 @@ verifyToken = (req, res, next) => {
   if (!isTokenPresent(req)) {
     return res.status(401).send({ message: 'No token provided!' });
   }
-
   let token = extractToken(req);
-
   jwt.verify(token, config.secret, (err, decoded) => {
     if (err) {
       return res.status(403).send({ message: 'Unauthorized!' });
@@ -34,7 +32,6 @@ verifyTokenIfPresent = (req, res, next) => {
     next();
     return;
   }
-
   let token = extractToken(req);
   jwt.verify(token, config.secret, (err, decoded) => {
     if (err) {
@@ -52,9 +49,7 @@ verifyPermission = (permission) => {
     if (!isTokenPresent(req)) {
       return res.status(401).send({ message: 'No token provided!' });
     }
-
     let token = extractToken(req);
-
     jwt.verify(token, config.secret, (err, decoded) => {
       if (err) {
         return res.status(403).send({ message: 'Access denied.' });

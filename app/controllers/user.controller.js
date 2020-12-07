@@ -40,6 +40,19 @@ returnUserWithToken = (data) => {
   };
 };
 
+//helper function to return userObject
+returnUserLimited = (data) => {
+  return {
+    id: data._id || data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    dateOfBirth: data.dateOfBirth,
+    imageURL: data.imageURL,
+    permissions: data.permissions,
+  };
+};
+
 // Create and Save a new user
 exports.create = (req, res) => {
   // Validate request
@@ -174,7 +187,7 @@ exports.findOne = (req, res) => {
   User.findById(id)
     .then((data) => {
       if (!data) res.status(404).send({ message: 'Not found user with id ' + id });
-      else res.send(data);
+      else res.send(returnUserLimited(data));
     })
     .catch((err) => {
       res.status(500).send({ message: 'Error retrieving user with id=' + id });

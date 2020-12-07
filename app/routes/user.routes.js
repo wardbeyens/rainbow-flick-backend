@@ -14,7 +14,7 @@ module.exports = (app) => {
   // router.post('/admin', [authJwt.verifyToken, authJwt.verifyPermission('ADMIN_CREATE')], users.createAdmin);
 
   // Retrieve a single user with id
-  router.get('/:id', [authJwt.verifyToken], users.findOne);
+  router.get('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_READ')], users.findOne);
 
   // router.put('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_EDIT')], users.edit);
 
