@@ -1,6 +1,8 @@
+const { team } = require('../models');
 const db = require('../models');
 const Match = db.match;
 const Score = db.score;
+const Team = db.team;
 
 returnMatches = (data) => {
   return {
@@ -35,10 +37,6 @@ returnMatch = (data) => {
 validateMatchFields = (req) => {
   let validationMessages = [];
 
-  if (!req.body.name) {
-    validationMessages.push('Name is required.');
-  }
-
   if (!req.body.dateTimePlanned) {
     validationMessages.push('DateTimePlanned is required.');
   }
@@ -51,6 +49,25 @@ validateMatchFields = (req) => {
   }
   if (!req.body.table) {
     validationMessages.push('Table is required.');
+  }
+  if (!req.body.name && validationMessages.length != 0) {
+    Team.findById(req.body.homeTeam)
+      .then((ownTeam) => {
+        Team.findById(req.body.awayTeam)
+          .then((challengeTeam) => {
+            req.body.name = ownTeam.name + ' vs ' + challengeTeam.name;
+          })
+          .catch((err) => {
+            return res.status(500).send({
+              message: err.message || 'Het team dat je uitdaagt is niet gevonden.',
+            });
+          });
+      })
+      .catch((err) => {
+        return res.status(500).send({
+          message: err.message || 'U eigen team is niet gevonden',
+        });
+      });
   }
   // If request not valid, return messages
   return validationMessages;
@@ -212,6 +229,63 @@ exports.updateScore = (req, res) => {
     .catch((err) => {
       return res.status(500).send({
         message: 'Error updating match with id=' + id,
+      });
+    });
+};
+
+exports.challengeTeam = (req, res) => {
+  let validationMessages = [];
+  if (!req.body.homeTeam) {
+    validationMessages.push('team id is vereist.');
+  }
+  if (!req.body.awayTeam) {
+    validationMessages.push('uitdagers team id is vereist.');
+  }
+  if (!req.body.dateTimePlanned) {
+    validationMessages.push('geplande datum is vereist.');
+  }
+  if (!req.body.table) {
+    validationMessages.push('tafel id is vereist.');
+  }
+
+  if (validationMessages.length != 0) {
+    return res.status(404).send({ message: validationMessages });
+  }
+  var naam = '';
+  Team.findById(req.body.homeTeam)
+    .then((ownTeam) => {
+      Team.findById(req.body.awayTeam)
+        .then((challengeTeam) => {
+          naam = ownTeam.name + ' vs ' + challengeTeam.name;
+          const match = new Match({
+            name: naam,
+            dateTimePlanned: req.body.dateTimePlanned,
+            homeTeam: req.body.homeTeam,
+            awayTeam: req.body.awayTeam,
+            table: req.body.table,
+          });
+
+          // Save match in the database
+          match
+            .save(match)
+            .then((data) => {
+              return res.send(returnMatch(data));
+            })
+            .catch((err) => {
+              return res.status(500).send({
+                message: err.message || 'Some error occurred while creating the match.',
+              });
+            });
+        })
+        .catch((err) => {
+          return res.status(500).send({
+            message: err.message || 'Het team dat je uitdaagt is niet gevonden.',
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: err.message || 'U eigen team is niet gevonden',
       });
     });
 };

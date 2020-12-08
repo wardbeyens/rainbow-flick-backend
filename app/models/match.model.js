@@ -33,7 +33,7 @@ module.exports = (mongoose) => {
         scoreSubmittedBy: String,
         scoreValidated: Boolean,
         requirementsReached: Boolean,
-        matchType: { name: String, minNumberPlayersPerTeam: Number },
+        matchType: { type: { name: String, minNumberPlayersPerTeam: Number }, default: false },
       },
       { timestamps: true }
     )

@@ -26,6 +26,8 @@ module.exports = (app) => {
   // Delete a match with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_DELETE')], matches.delete);
   //router.delete('/:id', matches.delete);
+  router.post('/challenge', [authJwt.verifyToken, authJwt.hasPermission('MATCH_CREATE')], matches.challengeTeam);
+  //router.post('/challenge', matches.challengeTeam);
 
   app.use('/api/match', router);
 };
