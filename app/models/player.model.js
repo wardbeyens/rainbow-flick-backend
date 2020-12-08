@@ -3,16 +3,8 @@ module.exports = (mongoose) => {
     'Player',
     mongoose.Schema(
       {
-        user: {
-          firstName: { type: String, required: true },
-          lastName: { type: String, required: true },
-          email: { type: String, required: true },
-          dateOfBirth: { type: Date, required: true },
-          imageURL: String,
-          permissions: { type: [String] },
-          password: { type: String, required: true, select: false },
-        },
-        teamID: Number,
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        teamID: { type: mongoose.Schema.Types.ObjectId, ref: 'team' },
       },
       { timestamps: true }
     )

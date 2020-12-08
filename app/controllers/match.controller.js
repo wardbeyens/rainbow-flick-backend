@@ -1,4 +1,3 @@
-const { match } = require('../models');
 const db = require('../models');
 const Match = db.match;
 const Score = db.score;
@@ -81,7 +80,8 @@ exports.create = (req, res) => {
   });
 
   // Save match in the database
-  Match.save(match)
+  match
+    .save(match)
     .then((data) => {
       return res.send(returnMatch(data));
     })
@@ -183,29 +183,35 @@ exports.updateScore = (req, res) => {
   }
   const id = req.params.id;
 
-  Match.findById(id).then((data) => {
-    let diffMs = new Date() - dateTimeStart;
-    let minutes = Math.round(((diffMs % 86400000) % 3600000) / 60000);
-    const score = new Score({
-      scoreHome: req.body.scoreHome,
-      scoreAway: req.body.scoreAway,
-      whenScored: minutes,
-      homeTeamScored: req.body.homeTeamScored,
-    });
-
-    match.score.push(score);
-    Match.findByIdAndUpdate(id, match, { new: true, useFindAndModify: false })
-      .then((data) => {
-        if (!data) {
-          return res.status(404).send({
-            message: `Cannot update match with id=${id}. Maybe match was not found!`,
-          });
-        } else return res.send(returnMatch(data));
-      })
-      .catch((err) => {
-        return res.status(500).send({
-          message: 'Error updating match with id=' + id,
-        });
+  Match.findById(id)
+    .then((data) => {
+      let diffMs = new Date() - data.dateTimeStart;
+      let minutes = Math.round(((diffMs % 86400000) % 3600000) / 60000);
+      const score = new Score({
+        scoreHome: req.body.scoreHome,
+        scoreAway: req.body.scoreAway,
+        whenScored: minutes,
+        homeTeamScored: req.body.homeTeamScored,
       });
-  });
+
+      data.score.push(score);
+      Match.findByIdAndUpdate(id, data, { new: true, useFindAndModify: false })
+        .then((data) => {
+          if (!data) {
+            return res.status(404).send({
+              message: `Cannot update match with id=${id}. Maybe match was not found!`,
+            });
+          } else return res.send(returnMatch(data));
+        })
+        .catch((err) => {
+          return res.status(500).send({
+            message: 'Error updating match with id=' + id,
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: 'Error updating match with id=' + id,
+      });
+    });
 };

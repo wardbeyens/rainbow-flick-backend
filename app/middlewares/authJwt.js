@@ -82,7 +82,7 @@ hasPermissionMatchScore = () => {
         req.authUser = user;
         const id = req.params.id;
         Match.findById(id).then((match) => {
-          var users = match.players.map(u=>u.user);
+          var users = match.players.map((u) => u.user);
           if (users.includes(user)) {
             next();
           } else {
@@ -125,5 +125,6 @@ const authJwt = {
   verifyTokenIfPresent,
   hasPermission,
   hasPermissionOrIsUserItself,
+  hasPermissionMatchScore,
 };
 module.exports = authJwt;

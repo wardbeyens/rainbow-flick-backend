@@ -12,5 +12,5 @@ module.exports = (mongoose) => {
     )
   );
 
-  return Player;
+  return Score;
 };
