@@ -26,5 +26,7 @@ module.exports = (app) => {
 
   router.post('/:id/join', [authJwt.verifyToken], teams.join);
 
+  router.post('/:id/accept', [authJwt.verifyToken], teams.accept);
+
   app.use('/api/team', router);
 };

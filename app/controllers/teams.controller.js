@@ -229,3 +229,57 @@ exports.join = async (req, res) => {
   let teamFormatted = await returnTeam(response);
   return res.send(teamFormatted);
 };
+
+exports.accept = async (req, res) => {
+  if (!req.body) {
+    return res.status(400).send({
+      message: 'Data to update can not be empty!',
+    });
+  }
+
+  const teamID = req.params.id;
+
+  const userID = req.body.id;
+
+  let response;
+  try {
+    response = await Team.findById(teamID);
+  } catch (err) {
+    return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + teamID });
+  }
+  if (!response) return res.status(404).send({ message: 'Not found team with id ' + teamID });
+
+  let participants = response.participants;
+  let requestedParticipants = response.requestedParticipants;
+
+  if (participants.includes(userID)) {
+    return res.status(400).send({
+      message: 'Je bent al lid van dit team, no worries.',
+    });
+  } else {
+    participants.push(userID);
+  }
+
+  // een restrictie die we kunnen toevoegen maar wrs nu te veel is
+  /*   if (requestedParticipants.includes(userID)) {
+    participants.push(userID);
+  } else {
+    return res.status(400).send({
+      message: 'De gebruiker moet zich eerst aanmelden voor dit team vooralleer je hem kan toevoegen .',
+    });
+  } */
+
+  try {
+    response = await Team.findByIdAndUpdate(
+      teamID,
+      { participants: participants },
+      { new: true, useFindAndModify: false }
+    );
+  } catch (err) {
+    return res.status(500).send({
+      message: 'Error updating team with id=' + id,
+    });
+  }
+  let teamFormatted = await returnTeam(response);
+  return res.send(teamFormatted);
+};
