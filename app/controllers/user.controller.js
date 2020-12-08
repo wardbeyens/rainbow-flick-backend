@@ -92,27 +92,45 @@ createToken = (user) => {
 //helper function to return userObject
 returnUserWithToken = (data) => {
   return {
-    id: data._id || data.id,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    email: data.email,
-    dateOfBirth: data.dateOfBirth,
-    imageURL: data.imageURL,
-    permissions: data.permissions,
-    accessToken: createToken(data),
+    result: {
+      id: data._id || data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      dateOfBirth: data.dateOfBirth,
+      imageURL: data.imageURL,
+      permissions: data.permissions,
+      accessToken: createToken(data),
+    },
   };
 };
 
 //helper function to return userObject
 returnUserLimited = (data) => {
   return {
-    id: data._id || data.id,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    email: data.email,
-    dateOfBirth: data.dateOfBirth,
-    imageURL: data.imageURL,
-    permissions: data.permissions,
+    result: {
+      id: data._id || data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      dateOfBirth: data.dateOfBirth,
+      imageURL: data.imageURL,
+      permissions: data.permissions,
+    },
+  };
+};
+
+returnUsers = (data) => {
+  return {
+    results: data.map((data) => ({
+      id: data._id || data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      dateOfBirth: data.dateOfBirth,
+      imageURL: data.imageURL,
+      permissions: data.permissions,
+    })),
   };
 };
 
@@ -239,14 +257,7 @@ exports.findAll = (req, res) => {
   User.find({})
     .then((users) => {
       if (!users) return res.status(404).send({ message: 'No users found' });
-
-      var userMap = {};
-
-      users.forEach(function (user) {
-        userMap[user._id] = returnUserLimited(user);
-      });
-
-      return res.send(userMap);
+      return res.send(returnUsers(users));
     })
     .catch((err) => {
       return res.status(500).send({ message: err.message || 'Error retrieving users' });
