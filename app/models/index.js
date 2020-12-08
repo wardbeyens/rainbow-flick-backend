@@ -10,6 +10,8 @@ db.url = dbConfig.url;
 
 db.users = require('./user.model.js')(mongoose);
 db.table = require('./table.model.js')(mongoose);
+db.team = require('./team.model.js')(mongoose);
+
 // db.articles = require("./article.model.js")(mongoose);
 // db.roles = require("./role.model.js")(mongoose);
 // db.tags = require("./tag.model.js")(mongoose);
