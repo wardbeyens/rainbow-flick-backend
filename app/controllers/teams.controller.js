@@ -283,3 +283,13 @@ exports.accept = async (req, res) => {
   let teamFormatted = await returnTeam(response);
   return res.send(teamFormatted);
 };
+
+exports.findOneLocal = async (id) => {
+  let response;
+  try {
+    response = await Team.findById(id);
+  } catch (err) {
+    return {};
+  }
+  return returnTeam(response);
+};

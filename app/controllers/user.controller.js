@@ -120,6 +120,18 @@ returnUserLimited = (data) => {
   };
 };
 
+returnUserLimitedLocal = (data) => {
+  return {
+    id: data._id || data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    dateOfBirth: data.dateOfBirth,
+    imageURL: data.imageURL,
+    permissions: data.permissions,
+  };
+};
+
 returnUsers = (data) => {
   return {
     results: data.map((data) => ({
@@ -317,4 +329,16 @@ exports.createAdmin = (req, res) => {
       return res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
+};
+
+exports.findOneLocal = async (id) => {
+  let response;
+  try {
+    response = await User.findById(id);
+  } catch (err) {
+    return res.status(500).send({ message: err.message || 'Error retrieving user with id: ' + id });
+  }
+  if (!response) return res.status(404).send({ message: 'Not found user with id ' + id });
+
+  return returnUserLimitedLocal(response);
 };

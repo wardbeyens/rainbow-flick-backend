@@ -3,22 +3,42 @@ const db = require('../models');
 const Match = db.match;
 const Score = db.score;
 const Team = db.team;
-const Player = db.player;
-returnMatches = (data) => {
-  return {
-    results: data.map((d) => returnMatchObject(d)),
-  };
+// const Player = db.player;
+const TeamController = require('./teams.controller');
+const UserController = require('./user.controller');
+
+returnMatches = async (data) => {
+  let returnMatchesArray = [];
+  for (let i = 0; i < data.length; i++) {
+    let originalMatch = data[i];
+
+    returnMatchesArray.push(await returnMatchObject(data[i]));
+  }
+  return { results: returnMatchesArray };
 };
-returnMatchObject = (data) => {
+
+getPlayers = async (players) => {
+  let returnPlayers = [];
+  for (let i = 0; i < players.length; i++) {
+    let originalPlayer = players[i];
+    let player = {};
+    player.user = await UserController.findOneLocal(originalPlayer.user);
+    player.team = originalPlayer.team;
+
+    returnPlayers.push(player);
+  }
+  return returnPlayers;
+};
+returnMatchObject = async (data) => {
   return {
     id: data._id || data.id,
     name: data.name,
     dateTimePlanned: data.dateTimePlanned,
     dateTimeStart: data.dateTimeStart,
     dateTimeEnd: data.dateTimeEnd,
-    homeTeam: data.homeTeam,
-    awayTeam: data.awayTeam,
-    players: data.players,
+    homeTeam: await TeamController.findOneLocal(data.homeTeam),
+    awayTeam: await TeamController.findOneLocal(data.awayTeam),
+    players: await getPlayers(data.players),
     score: data.score,
     table: data.table,
     scoreSubmittedBy: data.scoreSubmittedBy,
@@ -28,13 +48,28 @@ returnMatchObject = (data) => {
   };
 };
 //helper function to return matchObject
-returnMatch = (data) => {
+returnMatch = async (data) => {
+  var result = await returnMatchObject(data);
   return {
-    result: returnMatchObject(data),
+    result: result,
   };
 };
 
-validateMatchFields = (req) => {
+teamIsNotValid = async (teamID) => {
+  let result;
+  try {
+    result = await Team.findById(teamID);
+    if (!result) {
+      return false;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    return false;
+  }
+};
+
+validateMatchFields = async (req, res) => {
   let validationMessages = [];
 
   if (!req.body.dateTimePlanned) {
@@ -49,6 +84,12 @@ validateMatchFields = (req) => {
   }
   if (!req.body.table) {
     validationMessages.push('Table is required.');
+  }
+  if (!(await teamIsNotValid(req.body.homeTeam))) {
+    validationMessages.push('Home team is not valid');
+  }
+  if (!(await teamIsNotValid(req.body.awayTeam))) {
+    validationMessages.push('Away team is not valid.');
   }
   if (!req.body.name && validationMessages.length != 0) {
     Team.findById(req.body.homeTeam)
@@ -69,16 +110,19 @@ validateMatchFields = (req) => {
         });
       });
   }
+
   // If request not valid, return messages
   return validationMessages;
 };
 // Create and Save a new match
-exports.create = (req, res) => {
-  let validationMessages = validateMatchFields(req);
+exports.create = async (req, res) => {
+  console.log('start hier');
+  let validationMessages = await validateMatchFields(req, res);
 
   if (validationMessages.length != 0) {
     return res.status(404).send({ message: validationMessages });
   }
+
   // Create a Match
   const match = new Match({
     name: req.body.name,
@@ -95,12 +139,14 @@ exports.create = (req, res) => {
     requirementsReached: req.body.requirementsReached,
     matchType: req.body.matchType,
   });
-
+  console.log('save match');
   // Save match in the database
+
   match
     .save(match)
-    .then((data) => {
-      return res.send(returnMatch(data));
+    .then(async (data) => {
+      console.log('TEST TEST TEST');
+      return res.send(await returnMatch(data));
     })
     .catch((err) => {
       return res.status(500).send({
@@ -109,10 +155,10 @@ exports.create = (req, res) => {
     });
 };
 // Retrieve all matches from the database.
-exports.findAll = (req, res) => {
+exports.findAll = async (req, res) => {
   Match.find()
-    .then((data) => {
-      return res.send(returnMatches(data));
+    .then(async (data) => {
+      return res.send(await returnMatches(data));
     })
     .catch((err) => {
       return res.status(500).send({
@@ -122,13 +168,13 @@ exports.findAll = (req, res) => {
 };
 
 // Find a single match with an id
-exports.findOne = (req, res) => {
+exports.findOne = async (req, res) => {
   const id = req.params.id;
 
   Match.findById(id)
-    .then((data) => {
+    .then(async (data) => {
       if (!data) return res.status(404).send({ message: 'Not found match with id ' + id });
-      else return res.send(returnMatch(data));
+      else return res.send(await returnMatch(data));
     })
     .catch((err) => {
       return res.status(500).send({ message: 'Error retrieving match with id=' + id });
@@ -136,22 +182,22 @@ exports.findOne = (req, res) => {
 };
 
 // Update a match by the id in the request
-exports.update = (req, res) => {
-  let validationMessages = validateMatchFields(req);
+exports.update = async (req, res) => {
+  // let validationMessages = validateMatchFields(req);
 
-  if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
-  }
+  // if (validationMessages.length != 0) {
+  //   return res.status(404).send({ message: validationMessages });
+  // }
 
   const id = req.params.id;
 
   Match.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
-    .then((data) => {
+    .then(async (data) => {
       if (!data) {
         return res.status(404).send({
           message: `Cannot update match with id=${id}. Maybe match was not found!`,
         });
-      } else return res.send(returnMatch(data));
+      } else return res.send(await returnMatch(data));
     })
     .catch((err) => {
       return res.status(500).send({
@@ -161,7 +207,7 @@ exports.update = (req, res) => {
 };
 
 // Delete a match with the specified id in the request
-exports.delete = (req, res) => {
+exports.delete = async (req, res) => {
   const id = req.params.id;
 
   Match.findByIdAndRemove(id)
@@ -183,12 +229,15 @@ exports.delete = (req, res) => {
     });
 };
 
-exports.updateScore = (req, res) => {
+exports.updateScore = async (req, res) => {
+  console.log(req.body);
+  console.log(req.body.scoreAway);
+
   let validationMessages = [];
   if (!req.body.scoreHome) {
     validationMessages.push('ScoreHome is required.');
   }
-  if (!req.body.scoreAway) {
+  if (req.body.scoreAway == undefined) {
     validationMessages.push('ScoreAway is required.');
   }
   if (!req.body.homeTeamScored) {
@@ -213,12 +262,12 @@ exports.updateScore = (req, res) => {
 
       data.score.push(score);
       Match.findByIdAndUpdate(id, data, { new: true, useFindAndModify: false })
-        .then((data) => {
+        .then(async (data) => {
           if (!data) {
             return res.status(404).send({
               message: `Cannot update match with id=${id}. Maybe match was not found!`,
             });
-          } else return res.send(returnMatch(data));
+          } else return res.send(await returnMatch(data));
         })
         .catch((err) => {
           return res.status(500).send({
@@ -233,7 +282,7 @@ exports.updateScore = (req, res) => {
     });
 };
 
-exports.challengeTeam = (req, res) => {
+exports.challengeTeam = async (req, res) => {
   let validationMessages = [];
   if (!req.body.homeTeam) {
     validationMessages.push('team id is vereist.');
@@ -268,8 +317,8 @@ exports.challengeTeam = (req, res) => {
           // Save match in the database
           match
             .save(match)
-            .then((data) => {
-              return res.send(returnMatch(data));
+            .then(async (data) => {
+              return res.send(await returnMatch(data));
             })
             .catch((err) => {
               return res.status(500).send({
@@ -290,7 +339,7 @@ exports.challengeTeam = (req, res) => {
     });
 };
 
-exports.join = (req, res) => {
+exports.join = async (req, res) => {
   let validationMessages = [];
   if (!req.body.user) {
     validationMessages.push('user id is vereist.');
@@ -345,14 +394,12 @@ exports.join = (req, res) => {
                     });
                   } else {
                     match.players.push({ user: user, team: awayTeam });
-                    console.log(match.players);
                     CheckRequirementsReachedAndSaveMatch(match, req, res);
                   }
                 }
               });
             } else {
               match.players.push({ user: user, team: ownTeam });
-              console.log(match.players);
               CheckRequirementsReachedAndSaveMatch(match, req, res);
             }
           }
@@ -366,7 +413,7 @@ exports.join = (req, res) => {
   });
 };
 
-CheckRequirementsReachedAndSaveMatch = (match, req, res) => {
+CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
   const minNumberPlayersPerTeam = match.matchType.minNumberPlayersPerTeam;
   var ownTeamCount = 0;
   var awayTeamCount = 0;
@@ -388,11 +435,10 @@ CheckRequirementsReachedAndSaveMatch = (match, req, res) => {
   if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= awayTeamCount) {
     match.requirementsReached = true;
   }
-  console.log(match);
   match
     .save(match)
-    .then((data) => {
-      return res.send(returnMatch(data));
+    .then(async (data) => {
+      return res.send(await returnMatch(data));
     })
     .catch((err) => {
       return res.status(500).send({
