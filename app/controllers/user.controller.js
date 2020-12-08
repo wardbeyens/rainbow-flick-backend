@@ -122,7 +122,15 @@ returnUserLimited = (data) => {
 
 returnUsers = (data) => {
   return {
-    results: data.map((d) => returnUserLimited(d)),
+    results: data.map((data) => ({
+      id: data._id || data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      dateOfBirth: data.dateOfBirth,
+      imageURL: data.imageURL,
+      permissions: data.permissions,
+    })),
   };
 };
 
