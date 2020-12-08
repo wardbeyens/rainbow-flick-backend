@@ -1,3 +1,4 @@
 module.exports = {
-  admin: ['USER_READ', 'USER_DELETE', 'USER_EDIT', 'ADMIN_CREATE'],
+  adminPermissions: ['USER_READ', 'USER_DELETE', 'USER_UPDATE', 'ADMIN_CREATE'],
+  userPermissions: ['USER_READ'],
 };
