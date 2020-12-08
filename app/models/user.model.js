@@ -1,14 +1,15 @@
-module.exports = mongoose => {
+module.exports = (mongoose) => {
   const User = mongoose.model(
-    "User",
+    'User',
     mongoose.Schema(
       {
-        FirstName: String,
-        LastName: String,
-        Email: String,
-        Username: {type: String, required: true},
-        Password: {type: String, required: true, select: false},
-        RoleID: {type: String, required: true}
+        firstName: { type: String, required: true },
+        lastName: { type: String, required: true },
+        email: { type: String, required: true },
+        dateOfBirth: { type: Date, required: true },
+        imageURL: String,
+        permissions: { type: [String] },
+        password: { type: String, required: true, select: false },
       },
       { timestamps: true }
     )
