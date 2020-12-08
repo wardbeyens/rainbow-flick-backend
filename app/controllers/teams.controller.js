@@ -140,27 +140,13 @@ exports.delete = async (req, res) => {
   try {
     response = await Team.findByIdAndRemove(id);
   } catch (err) {
-    return res.status(500).send({ message: err.message || 'Error deleting team with id: ' + id });
+    return res.status(500).send({ message: err.message || 'Could not delete team with id=' + id });
   }
   if (!response)
     return res.status(404).send({
-      message: `Cannot delete user with id=${id}. Maybe user was not found!`,
+      message: `Cannot delete team with id=${id}. Maybe team was not found!`,
     });
-  return res.send(await returnTeam(response[0]));
-
-  User.findByIdAndRemove(id)
-    .then((data) => {
-      if (!data) {
-        return res.status(404).send({
-          message: `Cannot delete user with id=${id}. Maybe user was not found!`,
-        });
-      } else {
-        return res.send({
-          message: 'User was deleted successfully!',
-        });
-      }
-    })
-    .catch((err) => {
-      return res.status(500).send({ message: err.message || 'Could not delete user with id=' + id });
-    });
+  return res.send({
+    message: 'Team was deleted successfully!',
+  });
 };
