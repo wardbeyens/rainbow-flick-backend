@@ -18,7 +18,9 @@ module.exports = (app) => {
 
   // Retrieve a single user with id
   router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);
-  // router.put('/:id', [authJwt.verifyToken, authJwt.verifyPermission('USER_EDIT')], users.edit);
+
+  // Update a single user with id
+  router.put('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_EDIT')], users.update);
 
   // Delete a user with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
