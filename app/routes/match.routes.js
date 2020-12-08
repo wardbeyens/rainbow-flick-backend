@@ -28,6 +28,8 @@ module.exports = (app) => {
   //router.delete('/:id', matches.delete);
   router.post('/challenge', [authJwt.verifyToken, authJwt.hasPermission('MATCH_CREATE')], matches.challengeTeam);
   //router.post('/challenge', matches.challengeTeam);
+  router.post('/join/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.join);
+  //router.post('/join/:id', matches.join);
 
   app.use('/api/match', router);
 };

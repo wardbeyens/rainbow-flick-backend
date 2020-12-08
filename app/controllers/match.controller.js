@@ -3,7 +3,7 @@ const db = require('../models');
 const Match = db.match;
 const Score = db.score;
 const Team = db.team;
-
+const Player = db.player;
 returnMatches = (data) => {
   return {
     results: data.map((d) => returnMatchObject(d)),
@@ -300,59 +300,81 @@ exports.join = (req, res) => {
     return res.status(404).send({ message: validationMessages });
   }
   const id = req.params.id;
-  const user = req.params.user;
+  const user = req.body.user;
 
   Match.findById(id).then((match) => {
-    var found = match.players.map((m) => {
-      if (m.user == user) {
-        return true;
-      }
-    });
-    if (found.length == 0) {
-      Team.findById(match.ownTeam).then((ownTeam) => {
-        found = ownTeam.participants.map((p) => {
-          if (m.user == user) {
-            return true;
-          }
-        });
-        if (found.length == 0) {
-          Team.findById(match.awayTeam).then((awayTeam) => {
-            found = awayTeam.participants.map((p) => {
-              if (m.user == user) {
+    if (!match) {
+      return res.status(404).send({
+        message: `Cannot update match with id=${id}. Because match was not found!`,
+      });
+    } else {
+      var players = match.players;
+      var found = players.map((m) => {
+        if (m.user === user) {
+          return true;
+        }
+      });
+      if (found.length == 0) {
+        Team.findById(match.homeTeam).then((ownTeam) => {
+          if (!ownTeam) {
+            return res.status(404).send({
+              message: `Cannot update match with id=${id}. Because HomeTeam was not found!`,
+            });
+          } else {
+            found = ownTeam.participants.map((p) => {
+              if (p.user === user) {
                 return true;
               }
             });
             if (found.length == 0) {
-              return res.status(500).send({
-                message: err.message || 'de gebruiker is niet gevonden in de teams die deelenemen aan de wedstrijd.',
+              Team.findById(match.awayTeam).then((awayTeam) => {
+                if (!awayTeam) {
+                  return res.status(404).send({
+                    message: `Cannot update match with id=${id}. Because AwayTeam was not found!`,
+                  });
+                } else {
+                  found = awayTeam.participants.map((p) => {
+                    if (p.user === user) {
+                      return true;
+                    }
+                  });
+                  if (found.length == 0) {
+                    return res.status(500).send({
+                      message:
+                        err.message || 'de gebruiker is niet gevonden in de teams die deelenemen aan de wedstrijd.',
+                    });
+                  } else {
+                    match.players.push({ user: user, team: awayTeam });
+                    console.log(match.players);
+                    CheckRequirementsReachedAndSaveMatch(match, req, res);
+                  }
+                }
               });
             } else {
-              match.participants.push({ user: user, team: awayTeam });
-              CheckRequirementsReachedAndSaveMatch(match);
+              match.players.push({ user: user, team: ownTeam });
+              console.log(match.players);
+              CheckRequirementsReachedAndSaveMatch(match, req, res);
             }
-          });
-        } else {
-          match.participants.push({ user: user, team: ownTeam });
-          CheckRequirementsReachedAndSaveMatch(match);
-        }
-      });
-    } else {
-      return res.status(500).send({
-        message: err.message || 'de gebruiker neemt al deel aan de wedstrijd.',
-      });
+          }
+        });
+      } else {
+        return res.status(500).send({
+          message: 'de gebruiker neemt al deel aan de wedstrijd.',
+        });
+      }
     }
   });
 };
 
-CheckRequirementsReachedAndSaveMatch = (match) => {
+CheckRequirementsReachedAndSaveMatch = (match, req, res) => {
   const minNumberPlayersPerTeam = match.matchType.minNumberPlayersPerTeam;
   var ownTeamCount = 0;
   var awayTeamCount = 0;
   var errorParticipants = false;
-  match.participants.map((p) => {
-    if (p.team == match.ownTeam) {
+  match.players.map((p) => {
+    if (p.team.equals(match.homeTeam)) {
       ownTeamCount = ownTeamCount + 1;
-    } else if (p.team == match.awayTeam) {
+    } else if (p.team.equals(match.awayTeam)) {
       awayTeamCount = awayTeamCount + 1;
     } else {
       errorParticipants = true;
@@ -360,13 +382,13 @@ CheckRequirementsReachedAndSaveMatch = (match) => {
   });
   if (errorParticipants) {
     return res.status(500).send({
-      message: err.message || 'Er is iemand die deelneemt aan de wedstrijd dat niet in het team van de wedstrijd zit.',
+      message: 'Er is iemand die deelneemt aan de wedstrijd dat niet in het team van de wedstrijd zit.',
     });
   }
   if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= awayTeamCount) {
     match.requirementsReached = true;
   }
-
+  console.log(match);
   match
     .save(match)
     .then((data) => {
