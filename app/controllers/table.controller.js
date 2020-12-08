@@ -1,13 +1,39 @@
 const db = require('../models');
 const Table = db.table;
 
+//helper function to return userObject
+returnTable = (data) => {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    location: data.location,
+    imageUrl: data.imageUrl,
+    contactName: data.contactName,
+    contactPhone: data.contactPhone,
+    description: data.description,
+    inUse: data.inUse,
+  };
+};
+
 // Create and Save a new table
 exports.create = (req, res) => {
-  console.log(req.body);
-  // Validate request
+  let validationMessages = [];
+
   if (!req.body.name) {
-    res.status(400).send({ message: 'Content can not be empty!' });
-    return;
+    validationMessages.push('Name is required.');
+  }
+
+  if (!req.body.location) {
+    validationMessages.push('Location is required.');
+  }
+
+  if (!req.body.description) {
+    validationMessages.push('Description is required.');
+  }
+
+  // If request not valid, return messages
+  if (validationMessages.length != 0) {
+    return res.status(404).send({ message: validationMessages });
   }
 
   // Create a table
@@ -25,25 +51,22 @@ exports.create = (req, res) => {
   table
     .save(table)
     .then((data) => {
-      res.send(data);
+      return res.send(returnTable(data));
     })
     .catch((err) => {
-      res.status(500).send({
+      return res.status(500).send({
         message: err.message || 'Some error occurred while creating the table.',
       });
     });
 };
 // Retrieve all tables from the database.
 exports.findAll = (req, res) => {
-  // const name = req.query.name;
-  // var condition = name ? { name: { $regex: new RegExp(name), $options: "i" } } : {};
-
   Table.find()
     .then((data) => {
-      res.send(data);
+      return res.send(data.map((d) => returnTable(d)));
     })
     .catch((err) => {
-      res.status(500).send({
+      return res.status(500).send({
         message: err.message || 'Some error occurred while retrieving tables.',
       });
     });
@@ -55,11 +78,11 @@ exports.findOne = (req, res) => {
 
   Table.findById(id)
     .then((data) => {
-      if (!data) res.status(404).send({ message: 'Not found table with id ' + id });
-      else res.send(data);
+      if (!data) return res.status(404).send({ message: 'Not found table with id ' + id });
+      else return res.send(returnTable(data));
     })
     .catch((err) => {
-      res.status(500).send({ message: 'Error retrieving table with id=' + id });
+      return res.status(500).send({ message: 'Error retrieving table with id=' + id });
     });
 };
 
@@ -76,13 +99,13 @@ exports.update = (req, res) => {
   Table.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
     .then((data) => {
       if (!data) {
-        res.status(404).send({
+        return res.status(404).send({
           message: `Cannot update table with id=${id}. Maybe table was not found!`,
         });
-      } else res.send(data);
+      } else return res.send(returnTable(data));
     })
     .catch((err) => {
-      res.status(500).send({
+      return res.status(500).send({
         message: 'Error updating table with id=' + id,
       });
     });
@@ -95,15 +118,17 @@ exports.delete = (req, res) => {
   Table.findByIdAndRemove(id)
     .then((data) => {
       if (!data) {
-        res.status(404).send({
+        return res.status(404).send({
           message: `Cannot delete table with id=${id}. Maybe table was not found!`,
         });
       } else {
-        res.send(data);
+        return res.send({
+          message: 'Table was deleted successfully!',
+        });
       }
     })
     .catch((err) => {
-      res.status(500).send({
+      return res.status(500).send({
         message: 'Could not delete table with id=' + id,
       });
     });

@@ -1,5 +1,5 @@
 module.exports = {
-  admin: [
+  adminPermissions: [
     'USER_READ',
     'USER_DELETE',
     'USER_UPDATE',
@@ -9,4 +9,5 @@ module.exports = {
     'TABLE_UPDATE',
     'TABLE_DELETE',
   ],
+  userPermissions: ['USER_READ'],
 };
