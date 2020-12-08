@@ -24,5 +24,7 @@ module.exports = (app) => {
   // // Delete a user with id
   router.delete('/:id', [authJwt.verifyToken], teams.delete);
 
+  router.post('/:id/join', [authJwt.verifyToken], teams.join);
+
   app.use('/api/team', router);
 };
