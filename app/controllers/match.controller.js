@@ -289,3 +289,92 @@ exports.challengeTeam = (req, res) => {
       });
     });
 };
+
+exports.join = (req, res) => {
+  let validationMessages = [];
+  if (!req.body.user) {
+    validationMessages.push('user id is vereist.');
+  }
+
+  if (validationMessages.length != 0) {
+    return res.status(404).send({ message: validationMessages });
+  }
+  const id = req.params.id;
+  const user = req.params.user;
+
+  Match.findById(id).then((match) => {
+    var found = match.players.map((m) => {
+      if (m.user == user) {
+        return true;
+      }
+    });
+    if (found.length == 0) {
+      Team.findById(match.ownTeam).then((ownTeam) => {
+        found = ownTeam.participants.map((p) => {
+          if (m.user == user) {
+            return true;
+          }
+        });
+        if (found.length == 0) {
+          Team.findById(match.awayTeam).then((awayTeam) => {
+            found = awayTeam.participants.map((p) => {
+              if (m.user == user) {
+                return true;
+              }
+            });
+            if (found.length == 0) {
+              return res.status(500).send({
+                message: err.message || 'de gebruiker is niet gevonden in de teams die deelenemen aan de wedstrijd.',
+              });
+            } else {
+              match.participants.push({ user: user, team: awayTeam });
+              CheckRequirementsReachedAndSaveMatch(match);
+            }
+          });
+        } else {
+          match.participants.push({ user: user, team: ownTeam });
+          CheckRequirementsReachedAndSaveMatch(match);
+        }
+      });
+    } else {
+      return res.status(500).send({
+        message: err.message || 'de gebruiker neemt al deel aan de wedstrijd.',
+      });
+    }
+  });
+};
+
+CheckRequirementsReachedAndSaveMatch = (match) => {
+  const minNumberPlayersPerTeam = match.matchType.minNumberPlayersPerTeam;
+  var ownTeamCount = 0;
+  var awayTeamCount = 0;
+  var errorParticipants = false;
+  match.participants.map((p) => {
+    if (p.team == match.ownTeam) {
+      ownTeamCount = ownTeamCount + 1;
+    } else if (p.team == match.awayTeam) {
+      awayTeamCount = awayTeamCount + 1;
+    } else {
+      errorParticipants = true;
+    }
+  });
+  if (errorParticipants) {
+    return res.status(500).send({
+      message: err.message || 'Er is iemand die deelneemt aan de wedstrijd dat niet in het team van de wedstrijd zit.',
+    });
+  }
+  if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= awayTeamCount) {
+    match.requirementsReached = true;
+  }
+
+  match
+    .save(match)
+    .then((data) => {
+      return res.send(returnMatch(data));
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: err.message || 'Some error occurred while creating the match.',
+      });
+    });
+};

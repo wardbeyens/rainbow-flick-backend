@@ -4,7 +4,7 @@ module.exports = (mongoose) => {
     mongoose.Schema(
       {
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-        teamID: { type: mongoose.Schema.Types.ObjectId, ref: 'team' },
+        team: { type: mongoose.Schema.Types.ObjectId, ref: 'team' },
       },
       { timestamps: true }
     )
