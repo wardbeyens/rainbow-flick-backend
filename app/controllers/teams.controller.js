@@ -59,19 +59,7 @@ returnTeams = async (d) => {
     formattedTeams.push(team);
   }
 
-  return formattedTeams;
-};
-
-storeTeamInDatabase = async (team, res) => {
-  try {
-    let newTeam = await team.save(team);
-    let newTeamFormatted = await returnTeam(newTeam);
-    return res.send(newTeamFormatted);
-  } catch (err) {
-    return res.status(500).send({
-      message: err.message || 'Some error occurred while creating the team.',
-    });
-  }
+  return { results: formattedTeams };
 };
 
 exports.create = async (req, res) => {
@@ -105,7 +93,15 @@ exports.create = async (req, res) => {
   if (response.length !== 0) {
     return res.status(404).send({ message: `Already exists a Team with this name: ${team.name}` });
   } else {
-    storeTeamInDatabase(team, res);
+    try {
+      let newTeam = await team.save(team);
+      let newTeamFormatted = await returnTeam(newTeam);
+      return res.send(newTeamFormatted);
+    } catch (err) {
+      return res.status(500).send({
+        message: err.message || 'Some error occurred while creating the team.',
+      });
+    }
   }
 };
 
@@ -162,4 +158,25 @@ exports.delete = async (req, res) => {
   return res.send({
     message: 'Team was deleted successfully!',
   });
+};
+
+exports.update = async (req, res) => {
+  if (!req.body) {
+    return res.status(400).send({
+      message: 'Data to update can not be empty!',
+    });
+  }
+
+  const id = req.params.id;
+
+  let response;
+  try {
+    response = await Team.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false });
+  } catch (err) {
+    return res.status(500).send({
+      message: 'Error updating team with id=' + id,
+    });
+  }
+  let teamFormatted = await returnTeam(response);
+  return res.send(teamFormatted);
 };
