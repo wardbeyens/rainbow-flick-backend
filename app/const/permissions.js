@@ -11,11 +11,7 @@ module.exports = {
     'MATCH_CREATE',
     'MATCH_READ',
     'MATCH_UPDATE',
-    'MATCH_DELETE'
+    'MATCH_DELETE',
   ],
-  userPermissions: ['USER_READ',
-  'TABLE_READ',
-  'MATCH_CREATE',
-  'MATCH_READ',
-],
+  userPermissions: ['USER_READ', 'TABLE_READ', 'MATCH_CREATE', 'MATCH_READ', 'MATCH_UPDATE'],
 };
