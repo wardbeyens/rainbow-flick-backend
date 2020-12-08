@@ -7,13 +7,17 @@ module.exports = (app) => {
   // Create a new user
   router.post('/', [authJwt.verifyToken], teams.create);
 
-  // Authenticate user
-  // router.post('/authenticate', users.authenticate);
+  // router.post('/:id', [authJwt.verifyToken], teams.create);
 
-  // // Create a new admin
-  // router.post('/admin', [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')], users.createAdmin);
+  // Retrieve all teams
+  router.get('/all', [authJwt.verifyToken], teams.findAll);
 
-  // // Retrieve all users
+  router.get('/search', [authJwt.verifyToken], teams.findOneByName);
+
+  // Retrieve a single team by id or name
+  router.get('/:id', [authJwt.verifyToken], teams.findOne);
+
+  // Retrieve all users
   // router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
 
   // // Retrieve a single user with id
@@ -23,7 +27,7 @@ module.exports = (app) => {
   // router.put('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_UPDATE')], users.update);
 
   // // Delete a user with id
-  // router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
+  router.delete('/:id', [authJwt.verifyToken], teams.delete);
 
   app.use('/api/team', router);
 };
