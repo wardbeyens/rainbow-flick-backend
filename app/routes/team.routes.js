@@ -4,26 +4,29 @@ module.exports = (app) => {
 
   var router = require('express').Router();
 
+  //[authJwt.verifyToken, authJwt.hasPermission('USER_READ')
+
   // Create a new user
   router.post('/', [authJwt.verifyToken], teams.create);
 
-  // Authenticate user
-  // router.post('/authenticate', users.authenticate);
+  // Retrieve all teams
+  router.get('/all', [authJwt.verifyToken], teams.findAll);
 
-  // // Create a new admin
-  // router.post('/admin', [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')], users.createAdmin);
+  // Search team by name with a name param in the url
+  router.get('/search', [authJwt.verifyToken], teams.findOneByName);
 
-  // // Retrieve all users
-  // router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
-
-  // // Retrieve a single user with id
-  // router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);
+  // Retrieve a single team by id or name
+  router.get('/:id', [authJwt.verifyToken], teams.findOne);
 
   // // Update a single user with id
-  // router.put('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_UPDATE')], users.update);
+  router.put('/:id', [authJwt.verifyToken], teams.update);
 
   // // Delete a user with id
-  // router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
+  router.delete('/:id', [authJwt.verifyToken], teams.delete);
+
+  router.post('/:id/join', [authJwt.verifyToken], teams.join);
+
+  router.post('/:id/accept', [authJwt.verifyToken], teams.accept);
 
   app.use('/api/team', router);
 };
