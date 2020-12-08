@@ -1,97 +1,197 @@
 const config = require('../config/auth.config');
 const db = require('../models');
-const roleIDs = require('../const/roleIDs');
 const User = db.users;
-const Role = db.roles;
+const { admin } = require('../const/permissions');
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
-const { response } = require('express');
-const { user } = require('../const/roleIDs');
 
-// Create and Save a new user
-exports.create = (req, res) => {
+//helper function to validate userfields
+validateUserFields = (req, isRequired) => {
   // Validate request
   validationMessages = [];
 
+  //First Name
+  if (!req.body.firstName && isRequired) {
+    validationMessages.push('FirstName is required.');
+  } else if (req.body.firstName) {
+    if (req.body.firstName.length < 2) {
+      validationMessages.push('FirstName must be at least 2 characters');
+    } else if (req.body.firstName.length > 24) {
+      validationMessages.push('FirstName can not be longer than 24 characters');
+    }
+  }
+
+  //Last Name
+  if (!req.body.lastName && isRequired) {
+    validationMessages.push('LastName is required.');
+  } else if (req.body.lastName) {
+    if (req.body.lastName.length < 3) {
+      validationMessages.push('LastName must be at least 3 characters');
+    } else if (req.body.lastName.length > 56) {
+      validationMessages.push('LastName can not be longer than 56 characters');
+    }
+  }
+
   // Email validation
   const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-  if (!req.body.Email) {
+  if (!req.body.email && isRequired) {
     validationMessages.push('Email is required.');
-  } else if (!emailRegex.test(req.body.Email)) {
-    validationMessages.push(`${req.body.Email} is not a valid email`);
-  }
-
-  // Username validation
-  if (!req.body.Username) {
-    validationMessages.push('Username is required.');
-  } else if (req.body.Username.length < 3) {
-    validationMessages.push('Username must be at least 3 characters');
-  } else if (req.body.Username.length > 16) {
-    validationMessages.push('Username can not be longer than 16 characters');
-  }
-
-  //First Name
-  if (!req.body.FirstName) {
-    validationMessages.push('FirstName is required.');
-  } else if (req.body.FirstName.length < 2) {
-    validationMessages.push('FirstName must be at least 2 characters');
-  } else if (req.body.FirstName.length > 24) {
-    validationMessages.push('FirstName can not be longer than 24 characters');
+  } else if (req.body.email) {
+    if (!emailRegex.test(req.body.email)) {
+      validationMessages.push(`${req.body.email} is not a valid email`);
+    }
   }
 
   //Last Name
-  if (!req.body.LastName) {
-    validationMessages.push('LastName is required.');
-  } else if (req.body.LastName.length < 3) {
-    validationMessages.push('LastName must be at least 3 characters');
-  } else if (req.body.LastName.length > 56) {
-    validationMessages.push('LastName can not be longer than 56 characters');
-  }
-
-  //Last Name
-  if (!req.body.Password) {
+  if (!req.body.password && isRequired) {
     validationMessages.push('Password is required.');
-  } else if (req.body.LastName.length < 3) {
-    validationMessages.push('Password must be at least 3 characters');
-  } else if (req.body.LastName.length > 128) {
-    validationMessages.push('Password can not be longer than 128 characters');
+  } else if (req.body.password) {
+    if (req.body.password.length < 3) {
+      validationMessages.push('Password must be at least 3 characters');
+    } else if (req.body.password.length > 128) {
+      validationMessages.push('Password can not be longer than 128 characters');
+    }
   }
 
+  //Last Name
+  if (!req.body.dateOfBirth && isRequired) {
+    validationMessages.push('Birthday is required.');
+  } else if (req.body.dateOfBirth) {
+    dateOfBirthCastedToDate = new Date(req.body.dateOfBirth);
+    if (isNaN(dateOfBirthCastedToDate.getTime())) {
+      // d.valueOf() could also work
+      validationMessages.push('Birthday must be a date');
+    }
+  }
+
+  return validationMessages;
+};
+
+//helper function to store user in db
+storeUserInDatabase = (user, res) => {
+  user
+    .save(user)
+    .then((data) => {
+      return res.send(returnUserWithToken(data));
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: err.message || 'Some error occurred while creating the user.',
+      });
+    });
+};
+
+//helper function to create a token
+createToken = (user) => {
+  return jwt.sign({ id: user._id || user.id, permissions: user.permissions }, config.secret, {
+    expiresIn: 86400, // 24 hours
+  });
+};
+
+//helper function to return userObject
+returnUserWithToken = (data) => {
+  return {
+    id: data._id || data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    dateOfBirth: data.dateOfBirth,
+    imageURL: data.imageURL,
+    permissions: data.permissions,
+    accessToken: createToken(data),
+  };
+};
+
+//helper function to return userObject
+returnUserLimited = (data) => {
+  return {
+    id: data._id || data.id,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email,
+    dateOfBirth: data.dateOfBirth,
+    imageURL: data.imageURL,
+    permissions: data.permissions,
+  };
+};
+
+// Create and Save a new user
+exports.create = (req, res) => {
+  let validationMessages = validateUserFields(req, true);
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ message: validationMessages });
   }
 
   // Create a user
-  const user = new User({
-    FirstName: req.body.FirstName,
-    LastName: req.body.LastName,
-    Email: req.body.Email,
-    Username: req.body.Username,
-    Password: bcrypt.hashSync(req.body.Password, 8),
-    RoleID: roleIDs.user,
+  let user = new User({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    dateOfBirth: new Date(req.body.dateOfBirth),
+    password: bcrypt.hashSync(req.body.password, 8),
   });
 
-  findIfExistsByUsernameOrEmail(user).then((response) => {
+  if (req.body.imageURL) {
+    user.imageURL = req.body.imageURL;
+  } else {
+    user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+  }
+
+  User.find({
+    email: req.body.email,
+  }).then((response) => {
     if (response.length == 0) {
       storeUserInDatabase(user, res);
     } else {
-      var errormessages = [];
-      for (const item of response) {
-        if (item.Username == user.Username) {
-          errormessages.push(`Username ${user.Username} is already taken.`);
-        }
-        if (item.Email == user.Email) {
-          errormessages.push(`Already exists an account with emailaddress ${user.Email}.`);
-        }
-      }
-      res.status(404).send({ message: errormessages });
+      return res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
 };
 
-// Save user in the database
+exports.authenticate = (req, res) => {
+  let validationMessages = [];
+
+  // Email validation
+  if (!req.body.email) {
+    validationMessages.push('Email is required.');
+  }
+
+  //Last Name
+  if (!req.body.password) {
+    validationMessages.push('Password is required.');
+  }
+
+  // If request not valid, return messages
+  if (validationMessages.length != 0) {
+    return res.status(404).send({ message: validationMessages });
+  }
+
+  User.findOne({
+    email: req.body.email,
+  })
+    .select('+password')
+    .exec((err, user) => {
+      if (err) {
+        return res.status(500).send({ message: err });
+      }
+
+      if (!user) {
+        return res.status(200).send({ error: 'Er is geen gebruiker gevonden met e-mailadres.' });
+      }
+
+      var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+
+      if (!passwordIsValid) {
+        return res.send({
+          error: 'Hey bruh, wachtwoord vergeten? Want het klopt niet eh man!',
+        });
+      }
+
+      return res.status(200).send(returnUserWithToken(user));
+    });
+};
 
 // Find a single user with an id
 exports.findOne = (req, res) => {
@@ -99,67 +199,55 @@ exports.findOne = (req, res) => {
 
   User.findById(id)
     .then((data) => {
-      if (!data) res.status(404).send({ message: 'Not found user with id ' + id });
-      else res.send(data);
+      if (!data) return res.status(404).send({ message: 'Not found user with id ' + id });
+      else return res.send(returnUserLimited(data));
     })
     .catch((err) => {
-      res.status(500).send({ message: 'Error retrieving user with id=' + id });
+      return res.status(500).send({ message: 'Error retrieving user with id=' + id });
     });
 };
 
-exports.authenticate = (req, res) => {
-  User.findOne({
-    Username: req.body.Username,
-  })
-    .select('+Password')
-    .exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
+// Update a user
+exports.update = (req, res) => {
+  let validationMessages = validateUserFields(req, false);
+  // If request not valid, return messages
+  if (validationMessages.length != 0) {
+    return res.status(404).send({ message: validationMessages });
+  }
 
-      if (!user) {
-        return res.status(200).send({ error: 'Aanmelden mislukt' });
-      }
+  const id = req.params.id;
 
-      var passwordIsValid = bcrypt.compareSync(req.body.Password, user.Password);
-
-      if (req.body.Password == user.Password) {
-        passwordIsValid = true;
-      }
-
-      if (!passwordIsValid) {
-        return res.send({
-          error: 'Aanmelden mislukt',
-        });
-      }
-
-      var token = jwt.sign(
-        { id: user.id, isAdmin: user.RoleID == roleIDs.admin, isAuthor: user.RoleID == roleIDs.author },
-        config.secret,
-        {
-          expiresIn: 86400, // 24 hours
-        }
-      );
-
-      res.status(200).send({
-        Id: user._id,
-        Username: user.Username,
-        Email: user.Email,
-        AccessToken: token,
-      });
-    });
-};
-
-exports.findAuthors = (req, res) => {
-  User.find({ RoleID: roleIDs.author })
+  User.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
     .then((data) => {
-      res.send(data);
+      if (!data) {
+        return res.status(404).send({
+          message: `Cannot update user with id=${id}. Maybe user was not found!`,
+        });
+      } else return res.send(returnUserWithToken(data));
     })
     .catch((err) => {
-      res.status(500).send({
-        message: err.message || 'Some error occurred while retrieving tags.',
+      return res.status(500).send({
+        message: 'Error updating tag with id=' + id,
       });
+    });
+};
+
+// Find all users
+exports.findAll = (req, res) => {
+  User.find({})
+    .then((users) => {
+      if (!users) return res.status(404).send({ message: 'No users found' });
+
+      var userMap = {};
+
+      users.forEach(function (user) {
+        userMap[user._id] = returnUserLimited(user);
+      });
+
+      return res.send(userMap);
+    })
+    .catch((err) => {
+      return res.status(500).send({ message: err.message || 'Error retrieving users' });
     });
 };
 
@@ -168,138 +256,52 @@ exports.delete = (req, res) => {
   const id = req.params.id;
 
   if (req.authUser._id == id) {
-    res.status(404).send({ message: "Can't delete own account" });
-    return;
+    return res.status(404).send({ message: "Can't delete own account" });
   }
 
   User.findByIdAndRemove(id)
     .then((data) => {
       if (!data) {
-        res.status(404).send({
+        return res.status(404).send({
           message: `Cannot delete user with id=${id}. Maybe user was not found!`,
         });
       } else {
-        res.send({
-          message: 'user was deleted successfully!',
+        return res.send({
+          message: 'User was deleted successfully!',
         });
       }
     })
     .catch((err) => {
-      res.status(500).send({
-        message: 'Could not delete user with id=' + id,
-      });
+      return res.status(500).send({ message: err.message || 'Could not delete user with id=' + id });
     });
 };
 
-findIfExistsByUsernameOrEmail = (user) => {
-  return User.find({ $or: [{ Username: user.Username }, { Email: user.Email }] });
-};
-
-storeUserInDatabase = (user, res) => {
-  user
-    .save(user)
-    .then((data) => {
-      var token = jwt.sign({ id: user.id, role: user.RoleID }, config.secret, {
-        expiresIn: 86400, // 24 hours
-      });
-      res.send({
-        Id: data._id,
-        FirstName: data.FirstName,
-        LastName: data.LastName,
-        Username: data.Username,
-        RoleID: data.RoleID,
-        Email: data.Email,
-        AccessToken: token,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || 'Some error occurred while creating the user.',
-      });
-    });
-};
-
-exports.createAuthor = (req, res) => {
-  // Validate request
-  validationMessages = [];
-
-  // Email validation
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-  if (!req.body.Email) {
-    validationMessages.push('Email is required.');
-  } else if (!emailRegex.test(req.body.Email)) {
-    validationMessages.push(`${req.body.Email} is not a valid email`);
-  }
-
-  // Username validation
-  if (!req.body.Username) {
-    validationMessages.push('Username is required.');
-  } else if (req.body.Username.length < 3) {
-    validationMessages.push('Username must be at least 3 characters');
-  } else if (req.body.Username.length > 16) {
-    validationMessages.push('Username can not be longer than 16 characters');
-  }
-
-  //First Name
-  if (!req.body.FirstName) {
-    validationMessages.push('FirstName is required.');
-  } else if (req.body.FirstName.length < 2) {
-    validationMessages.push('FirstName must be at least 2 characters');
-  } else if (req.body.FirstName.length > 24) {
-    validationMessages.push('FirstName can not be longer than 24 characters');
-  }
-
-  //Last Name
-  if (!req.body.LastName) {
-    validationMessages.push('LastName is required.');
-  } else if (req.body.LastName.length < 3) {
-    validationMessages.push('LastName must be at least 3 characters');
-  } else if (req.body.LastName.length > 56) {
-    validationMessages.push('LastName can not be longer than 56 characters');
-  }
-
-  //Last Name
-  if (!req.body.LastName) {
-    validationMessages.push('LastName is required.');
-  } else if (req.body.LastName.length < 3) {
-    validationMessages.push('LastName must be at least 3 characters');
-  } else if (req.body.LastName.length > 56) {
-    validationMessages.push('LastName can not be longer than 56 characters');
-  }
-
+// Creates an admin
+exports.createAdmin = (req, res) => {
+  let validationMessages = validateUserFields(req, true);
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ message: validationMessages });
   }
 
   // Create a user
-  const user = new User({
-    FirstName: req.body.FirstName,
-    LastName: req.body.LastName,
-    Email: req.body.Email,
-    Username: req.body.Username,
-    Password: bcrypt.hashSync(req.body.Password, 8),
-    RoleID: roleIDs.author,
+  let user = new User({
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    email: req.body.email,
+    dateOfBirth: new Date(req.body.dateOfBirth),
+    password: bcrypt.hashSync(req.body.password, 8),
   });
 
-  findIfExistsByUsernameOrEmail(user).then((response) => {
+  user.permissions = [...admin];
+
+  User.find({
+    email: req.body.email,
+  }).then((response) => {
     if (response.length == 0) {
       storeUserInDatabase(user, res);
     } else {
-      var errormessages = [];
-      for (const item of response) {
-        if (item.Username == user.Username) {
-          errormessages.push(`Username ${user.Username} is already taken.`);
-        }
-        if (item.Email == user.Email) {
-          errormessages.push(`Already exists an account with emailaddress ${user.Email}.`);
-        }
-      }
-      res.status(404).send({ message: errormessages });
+      return res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
-};
-
-exports.findUserById = (userID) => {
-  return User.findById(userID);
 };

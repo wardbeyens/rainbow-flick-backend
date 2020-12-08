@@ -1,24 +1,24 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/auth.config.js');
 const db = require('../models');
-const roleIDs = require('../const/roleIDs.js');
 const User = db.users;
 
-extractToken = (authField) => {
-  let tokenarray = authField.split(' ');
-  return tokenarray[1];
+isTokenPresent = (req) => {
+  return req.headers['authorization'] !== undefined;
+};
+
+extractToken = (req) => {
+  return req.headers['authorization'].split('Bearer ')[1];
 };
 
 verifyToken = (req, res, next) => {
-  let token = extractToken(req.headers['authorization']);
-
-  if (!token) {
-    return res.status(403).send({ message: 'No token provided!' });
+  if (!isTokenPresent(req)) {
+    return res.status(401).send({ message: 'No token provided!' });
   }
-
+  let token = extractToken(req);
   jwt.verify(token, config.secret, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: 'Unauthorized!' });
+      return res.status(403).send({ message: 'Unauthorized!' });
     }
     User.findById(decoded.id).then((user) => {
       req.authUser = user;
@@ -28,15 +28,14 @@ verifyToken = (req, res, next) => {
 };
 
 verifyTokenIfPresent = (req, res, next) => {
-  let token = extractToken(req.headers['authorization']);
-  if (!token) {
+  if (!isTokenPresent(req)) {
     next();
     return;
   }
-
+  let token = extractToken(req);
   jwt.verify(token, config.secret, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: 'Unauthorized!' });
+      return res.status(403).send({ message: 'Access denied.' });
     }
     User.findById(decoded.id).then((user) => {
       req.authUser = user;
@@ -45,44 +44,59 @@ verifyTokenIfPresent = (req, res, next) => {
   });
 };
 
-verifyAdminRole = (req, res, next) => {
-  let token = extractToken(req.headers['authorization']);
-
-  jwt.verify(token, config.secret, (err, decoded) => {
-    if (!decoded.isAdmin) {
-      return res.status(401).send({ message: 'Route requires admin privileges' });
+//basically if admin than continue
+hasPermission = (permission) => {
+  return (req, res, next) => {
+    if (!isTokenPresent(req)) {
+      return res.status(401).send({ message: 'No token provided!' });
     }
-    req.isAdmin = true;
-    next();
-  });
+    let token = extractToken(req);
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        return res.status(403).send({ message: 'Access denied.' });
+      }
+      User.findById(decoded.id).then((user) => {
+        req.authUser = user;
+        if (user.permissions.includes(permission)) {
+          next();
+        } else {
+          return res.status(403).send({ message: 'Route requires privileges' });
+        }
+      });
+    });
+  };
 };
 
-verifyAuthorRole = (req, res, next) => {
-  let token = extractToken(req.headers['authorization']);
-  jwt.verify(token, config.secret, (err, decoded) => {
-    if (!decoded.isAuthor) {
-      return res.status(401).send({ message: 'Route requires Author privileges' });
+//basically if admin or the logged in UserID is the same as the Parameter UserID
+hasPermissionOrIsUserItself = (permission) => {
+  return (req, res, next) => {
+    if (!isTokenPresent(req)) {
+      return res.status(401).send({ message: 'No token provided!' });
     }
-    req.isAuthor = true;
-    next();
-  });
-};
-
-verifyAuthorOrAdminRole = (req, res, next) => {
-  let token = extractToken(req.headers['authorization']);
-  jwt.verify(token, config.secret, (err, decoded) => {
-    if (!decoded.isAuthor && !decoded.isAdmin) {
-      return res.status(401).send({ message: 'Route requires Author or Admin privileges' });
-    }
-    next();
-  });
+    let token = extractToken(req);
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        return res.status(403).send({ message: 'Access denied.' });
+      }
+      if (req.params.id == decoded.id) {
+        next();
+      }
+      User.findById(decoded.id).then((user) => {
+        req.authUser = user;
+        if (user.permissions.includes(permission)) {
+          next();
+        } else {
+          return res.status(403).send({ message: 'Route requires privileges' });
+        }
+      });
+    });
+  };
 };
 
 const authJwt = {
   verifyToken,
-  verifyAdminRole,
-  verifyAuthorRole,
-  verifyAuthorOrAdminRole,
   verifyTokenIfPresent,
+  hasPermission,
+  hasPermissionOrIsUserItself,
 };
 module.exports = authJwt;

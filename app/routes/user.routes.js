@@ -10,17 +10,20 @@ module.exports = (app) => {
   // Authenticate user
   router.post('/authenticate', users.authenticate);
 
-  // Find Authors
-  router.get('/authors', [authJwt.verifyToken, authJwt.verifyAdminRole], users.findAuthors);
+  // Create a new admin
+  router.post('/admin', [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')], users.createAdmin);
 
-  // Find Authors
-  router.post('/authors', [authJwt.verifyToken, authJwt.verifyAdminRole], users.createAuthor);
+  // Retrieve all users
+  router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
 
   // Retrieve a single user with id
-  router.get('/:id', [authJwt.verifyToken, authJwt.verifyAdminRole], users.findOne);
+  router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);
+
+  // Update a single user with id
+  router.put('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_EDIT')], users.update);
 
   // Delete a user with id
-  router.delete('/:id', [authJwt.verifyToken, authJwt.verifyAdminRole], users.delete);
+  router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
 
-  app.use('/api/User', router);
+  app.use('/api/user', router);
 };
