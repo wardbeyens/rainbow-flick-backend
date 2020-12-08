@@ -2,16 +2,23 @@ const db = require('../models');
 const Table = db.table;
 
 //helper function to return userObject
+returnTables = (data) => {
+  return {
+    results: data.map((d) => returnTable(d)),
+  };
+};
 returnTable = (data) => {
   return {
-    id: data._id || data.id,
-    name: data.name,
-    location: data.location,
-    imageUrl: data.imageUrl,
-    contactName: data.contactName,
-    contactPhone: data.contactPhone,
-    description: data.description,
-    inUse: data.inUse,
+    result: {
+      id: data._id || data.id,
+      name: data.name,
+      location: data.location,
+      imageUrl: data.imageUrl,
+      contactName: data.contactName,
+      contactPhone: data.contactPhone,
+      description: data.description,
+      inUse: data.inUse,
+    },
   };
 };
 
@@ -63,7 +70,7 @@ exports.create = (req, res) => {
 exports.findAll = (req, res) => {
   Table.find()
     .then((data) => {
-      return res.send(data.map((d) => returnTable(d)));
+      return res.send(returnTables(data));
     })
     .catch((err) => {
       return res.status(500).send({
