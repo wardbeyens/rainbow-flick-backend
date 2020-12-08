@@ -38,11 +38,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'api loaded succesfully' });
 });
 
-require('./app/routes/role.routes')(app);
-require('./app/routes/table.routes')(app);
 // First User, other tables may depend on this table
 require('./app/routes/user.routes')(app);
-
+// require('./app/routes/role.routes')(app);
+require('./app/routes/table.routes')(app);
 // require("./app/routes/article.routes")(app);
 // require("./app/routes/articlestatus.routes")(app);
 // require("./app/routes/tag.routes")(app);
