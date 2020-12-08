@@ -1,7 +1,7 @@
 const config = require('../config/auth.config');
 const db = require('../models');
 const User = db.users;
-const { admin } = require('../const/permissions');
+const { adminPermissions, userPermissions } = require('../const/permissions');
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
@@ -138,6 +138,8 @@ exports.create = (req, res) => {
   } else {
     user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
+
+  user.permissions = [...userPermissions];
 
   User.find({
     email: req.body.email,
@@ -293,7 +295,7 @@ exports.createAdmin = (req, res) => {
     password: bcrypt.hashSync(req.body.password, 8),
   });
 
-  user.permissions = [...admin];
+  user.permissions = [...adminPermissions];
 
   User.find({
     email: req.body.email,
