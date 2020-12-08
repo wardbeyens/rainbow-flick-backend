@@ -41,6 +41,8 @@ app.get('/', (req, res) => {
 // First User, other tables may depend on this table
 require('./app/routes/user.routes')(app);
 require('./app/routes/table.routes')(app);
+require('./app/routes/team.routes')(app);
+
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;

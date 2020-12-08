@@ -1,5 +1,3 @@
-const User = require('./user.model');
-
 module.exports = (mongoose) => {
   const Team = mongoose.model(
     'Team',
@@ -9,9 +7,9 @@ module.exports = (mongoose) => {
         location: { type: String, required: true },
         companyName: { type: String, required: true },
         imageURL: { type: String, required: true },
-        captain: { type: User, required: true },
-        participants: [User],
-        requestedParticipants: [User],
+        captain: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+        participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        requestedParticipants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         locked: { type: Boolean, default: false },
       },
       { timestamps: true }
