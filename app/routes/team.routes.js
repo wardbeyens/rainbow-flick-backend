@@ -4,6 +4,8 @@ module.exports = (app) => {
 
   var router = require('express').Router();
 
+  //[authJwt.verifyToken, authJwt.hasPermission('USER_READ')
+
   // Create a new user
   router.post('/', [authJwt.verifyToken], teams.create);
 
@@ -12,13 +14,12 @@ module.exports = (app) => {
   // Retrieve all teams
   router.get('/all', [authJwt.verifyToken], teams.findAll);
 
+    // Search team by name with a name param in the url 
   router.get('/search', [authJwt.verifyToken], teams.findOneByName);
 
   // Retrieve a single team by id or name
   router.get('/:id', [authJwt.verifyToken], teams.findOne);
 
-  // Retrieve all users
-  // router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
 
   // // Retrieve a single user with id
   // router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);

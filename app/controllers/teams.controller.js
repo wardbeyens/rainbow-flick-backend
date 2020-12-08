@@ -15,6 +15,17 @@ returnUser = async (id) => {
   };
 };
 
+returnParticipants = async (originalParticipantsList) => {
+  if (!originalParticipantsList) return [];
+  let participantsList = [];
+  for (let index = 0; index < originalParticipantsList.length; index++) {
+    let id = originalParticipantsList[index];
+    let userData = await returnUser(id);
+    participantsList.push(userData);
+  }
+  return participantsList;
+};
+
 returnTeam = async (data) => {
   return {
     result: {
@@ -24,8 +35,8 @@ returnTeam = async (data) => {
       companyName: data.companyName,
       imageURL: data.imageURL,
       captain: await returnUser(data.captain),
-      participants: data.participants,
-      requestedParticipants: data.requestedParticipants,
+      participants: await returnParticipants(data.participants),
+      requestedParticipants: await returnParticipants(data.requestedParticipants),
     },
   };
 };
@@ -42,8 +53,8 @@ returnTeams = async (d) => {
       companyName: data.companyName,
       imageURL: data.imageURL,
       captain: userData,
-      participants: data.participants,
-      requestedParticipants: data.requestedParticipants,
+      participants: await returnParticipants(data.participants),
+      requestedParticipants: await returnParticipants(data.requestedParticipants),
     };
     formattedTeams.push(team);
   }
@@ -89,6 +100,8 @@ exports.create = async (req, res) => {
     });
   }
 
+  team.participants = [req.authUser.id];
+
   if (response.length !== 0) {
     return res.status(404).send({ message: `Already exists a Team with this name: ${team.name}` });
   } else {
@@ -130,7 +143,7 @@ exports.findOneByName = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with name: ' + name });
   }
-  if (!response) return res.status(404).send({ message: 'Not found team with name ' + name });
+  if (response.length == 0) return res.status(404).send({ message: 'Not found team with name ' + name });
   return res.send(await returnTeam(response[0]));
 };
 
