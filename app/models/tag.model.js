@@ -1,9 +1,9 @@
-module.exports = mongoose => {
+module.exports = (mongoose) => {
   const Tag = mongoose.model(
-    "Tag",
+    'Tag',
     mongoose.Schema(
       {
-        Name: String
+        Name: String,
       },
       { timestamps: true }
     )
