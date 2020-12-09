@@ -16,6 +16,7 @@ module.exports = (app) => {
   //router.get('/:id', matches.findOne);
 
   router.get('/leave/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.leave);
+  router.get('/start/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.start);
 
   // Update a match with id
   router.put('/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.update);
