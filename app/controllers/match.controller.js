@@ -1,4 +1,4 @@
-const { team } = require('../models');
+const { team, match } = require('../models');
 const db = require('../models');
 const Match = db.match;
 const Score = db.score;
@@ -281,6 +281,35 @@ exports.updateScore = async (req, res) => {
       });
     });
 };
+function isEmptyObject(obj) {
+  return !Object.keys(obj).length;
+}
+matchOnTable = async (table, dateTimePlanned) => {
+  let dateTimePlannedLowerLimit = new Date(dateTimePlanned - 10 * 60000);
+  let dateTimePlannedUperLimit = new Date(dateTimePlanned + 10 * 60000);
+
+  const query = Match.find();
+  let result;
+  try {
+    result = await query
+      .where('table')
+      .equals(table)
+      .where('dateTimePlanned')
+      .gt(dateTimePlannedLowerLimit)
+      .lt(dateTimePlannedUperLimit)
+      .where('dateTimeStart')
+      .ne(null)
+      .exec();
+
+    if (!isEmptyObject(result)) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return true;
+  }
+};
 
 exports.challengeTeam = async (req, res) => {
   let validationMessages = [];
@@ -296,7 +325,9 @@ exports.challengeTeam = async (req, res) => {
   if (!req.body.table) {
     validationMessages.push('tafel id is vereist.');
   }
-
+  if (await matchOnTable(req.body.table, req.body.dateTimePlanned)) {
+    validationMessages.push('Er is al een match bezig of gaat beginnen.');
+  }
   if (validationMessages.length != 0) {
     return res.status(404).send({ message: validationMessages });
   }
