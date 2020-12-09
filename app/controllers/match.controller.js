@@ -6,6 +6,7 @@ const Team = db.team;
 // const Player = db.player;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
+const { authJwt } = require('../middlewares');
 
 returnMatches = async (data) => {
   let returnMatchesArray = [];
@@ -389,11 +390,11 @@ exports.join = async (req, res) => {
       });
     } else {
       var players = match.players;
-      var found = players.map((m) => {
-        if (m.user === user) {
-          return true;
-        }
-      });
+      let found = players
+        .filter((m) => m.user === user)
+        .map((m) => {
+          return m;
+        });
       if (found.length == 0) {
         Team.findById(match.homeTeam).then((ownTeam) => {
           if (!ownTeam) {
@@ -475,5 +476,47 @@ CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
       return res.status(500).send({
         message: err.message || 'Some error occurred while creating the match.',
       });
+    });
+};
+
+exports.leave = async (req, res) => {
+  const id = req.params.id;
+  console.log('id : ' + id);
+  Match.findById(id)
+    .then(async (data) => {
+      console.log('data : ' + data);
+      if (!data) {
+        return res.status(404).send({ message: 'Not found match with id ' + id });
+      } else {
+        console.log(data.dateTimeStart !== undefined);
+        if (data.dateTimeStart !== undefined) {
+          console.log('in if');
+          let userid = await authJwt.getUserFromToken(req);
+          console.log('userid : ' + userid);
+          var players = data.players;
+          console.log(players);
+          let updatedPlayers = players
+            .filter((m) => m.user === userid)
+            .map((m) => {
+              return m;
+            });
+          console.log(updatedPlayers);
+          data.players = updatedPlayers;
+          data
+            .save(data)
+            .then(async (data) => {
+              console.log('saved');
+              return res.send(await returnMatch(data));
+            })
+            .catch((err) => {
+              return res.status(500).send({
+                message: err.message || 'Some error occurred while creating the match.',
+              });
+            });
+        }
+      }
+    })
+    .catch((err) => {
+      return res.status(500).send({ message: 'Error retrieving match with id=' + id });
     });
 };
