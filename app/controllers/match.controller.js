@@ -544,3 +544,27 @@ exports.start = async (req, res) => {
       });
     });
 };
+
+exports.end = async (req, res) => {
+  const id = req.params.id;
+
+  Match.findById(id)
+    .then((data) => {
+      data.dateTimeEnd = new Date();
+      data
+        .save(data)
+        .then(async (data) => {
+          return res.send(await returnMatch(data));
+        })
+        .catch((err) => {
+          return res.status(500).send({
+            message: err.message || 'Some error occurred while creating the match.',
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: 'Error updating match with id=' + id,
+      });
+    });
+};
