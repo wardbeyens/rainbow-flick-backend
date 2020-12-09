@@ -83,7 +83,7 @@ hasPermissionMatchScore = () => {
         const id = req.params.id;
         Match.findById(id).then((match) => {
           var users = match.players.map((u) => u.user);
-          if (users.includes(user)) {
+          if (users.includes(user._id)) {
             next();
           } else {
             return res.status(403).send({ message: 'Route requires privileges' });
