@@ -148,6 +148,8 @@ returnUsers = (data) => {
 
 // Create and Save a new user
 exports.create = (req, res) => {
+  console.log(req.body);
+
   let validationMessages = validateUserFields(req, true);
 
   // If request not valid, return messages
@@ -171,12 +173,6 @@ exports.create = (req, res) => {
   } else {
     user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
-
-  // if (req.body.imageURL) {
-  //   user.imageURL = req.body.imageURL;
-  // } else {
-  //   user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
-  // }
 
   user.permissions = [...userPermissions];
 
@@ -249,28 +245,52 @@ exports.findOne = (req, res) => {
 };
 
 // Update a user
-exports.update = (req, res) => {
+exports.update = async (req, res) => {
+  let alreadyExists = false;
   let validationMessages = validateUserFields(req, false);
   // If request not valid, return messages
   if (validationMessages.length != 0) {
     return res.status(400).send({ messages: validationMessages });
   }
 
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+
+  let user = req.body;
+
+  if (imageFilePaths[0]) {
+    user.imageURL = imageFilePaths[0];
+  }
+
   const id = req.params.id;
 
-  User.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
-    .then((data) => {
-      if (!data) {
-        return res.status(400).send({
-          message: `Cannot update user with id=${id}. Maybe user was not found!`,
-        });
-      } else return res.send(returnUserWithToken(data));
-    })
-    .catch((err) => {
-      return res.status(500).send({
-        message: 'Error updating tag with id=' + id,
-      });
+  if (user.email) {
+    let response = await User.find({
+      email: user.email,
     });
+    for (let index = 0; index < response.length; index++) {
+      const element = response[index];
+      if (id.toString() !== element._id.toString()) {
+        alreadyExists = true;
+      }
+    }
+  }
+  if (alreadyExists) {
+    return res.status(400).send({ message: `Already exists an account with this email: ${req.body.email}` });
+  } else {
+    User.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
+      .then((data) => {
+        if (!data) {
+          return res.status(400).send({
+            message: `Cannot update user with id=${id}. Maybe user was not found!`,
+          });
+        } else return res.send(returnUserWithToken(data));
+      })
+      .catch((err) => {
+        return res.status(500).send({
+          message: 'Error updating with id=' + id,
+        });
+      });
+  }
 };
 
 // Find all users
@@ -289,9 +309,9 @@ exports.findAll = (req, res) => {
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  // if (req.authUser._id == id) {
-  //   return res.status(400).send({ message: "Can't delete own account" });
-  // }
+  if (req.authUser._id == id) {
+    return res.status(400).send({ message: "Can't delete own account" });
+  }
 
   User.findByIdAndRemove(id)
     .then((data) => {
@@ -312,12 +332,13 @@ exports.delete = (req, res) => {
 
 // Creates an admin
 exports.createAdmin = (req, res) => {
+  console.log(req.body);
   let validationMessages = validateUserFields(req, true);
+
   // If request not valid, return messages
   if (validationMessages.length != 0) {
     return res.status(400).send({ messages: validationMessages });
   }
-
   // Create a user
   let user = new User({
     firstName: req.body.firstName,
@@ -326,6 +347,14 @@ exports.createAdmin = (req, res) => {
     dateOfBirth: new Date(req.body.dateOfBirth),
     password: bcrypt.hashSync(req.body.password, 8),
   });
+
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+
+  if (imageFilePaths[0]) {
+    user.imageURL = imageFilePaths[0];
+  } else {
+    user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+  }
 
   user.permissions = [...adminPermissions];
 
