@@ -526,23 +526,27 @@ exports.start = async (req, res) => {
   const id = req.params.id;
 
   Match.findById(id)
-    .then((data) => {
-      if (data.requirementsReached) {
-        data.dateTimeStart = new Date();
-        data
-          .save(data)
-          .then(async (data) => {
-            return res.send(await returnMatch(data));
-          })
-          .catch((err) => {
-            return res.status(500).send({
-              message: err.message || 'Some error occurred while creating the match.',
-            });
-          });
+    .then(async (data) => {
+      if (!data) {
+        return res.status(404).send({ message: 'Not found match with id ' + id });
       } else {
-        return res.status(400).send({
-          message: 'The requirements to start a match were not reached.',
-        });
+        if (data.requirementsReached) {
+          data.dateTimeStart = new Date();
+          data
+            .save(data)
+            .then(async (data) => {
+              return res.send(await returnMatch(data));
+            })
+            .catch((err) => {
+              return res.status(500).send({
+                message: err.message || 'Some error occurred while creating the match.',
+              });
+            });
+        } else {
+          return res.status(400).send({
+            message: 'The requirements to start a match were not reached.',
+          });
+        }
       }
     })
     .catch((err) => {
@@ -556,22 +560,72 @@ exports.end = async (req, res) => {
   const id = req.params.id;
 
   Match.findById(id)
-    .then((data) => {
-      data.dateTimeEnd = new Date();
-      data
-        .save(data)
-        .then(async (data) => {
-          return res.send(await returnMatch(data));
-        })
-        .catch((err) => {
-          return res.status(500).send({
-            message: err.message || 'Some error occurred while creating the match.',
+    .then(async (data) => {
+      if (!data) {
+        return res.status(404).send({ message: 'Not found match with id ' + id });
+      } else {
+        data.dateTimeEnd = new Date();
+        data
+          .save(data)
+          .then(async (data) => {
+            return res.send(await returnMatch(data));
+          })
+          .catch((err) => {
+            return res.status(500).send({
+              message: err.message || 'Some error occurred while creating the match.',
+            });
           });
-        });
+      }
     })
     .catch((err) => {
       return res.status(500).send({
         message: 'Error updating match with id=' + id,
       });
     });
+};
+
+exports.validateMatch = async (req, res) => {
+  const id = req.params.id;
+
+  Match.findById(id)
+    .then(async (data) => {
+      if (!data) {
+        return res.status(404).send({ message: 'Not found match with id ' + id });
+      } else {
+        if (data.dateTimeEnd !== undefined) {
+          let userid = req.authUser;
+          let player = players
+            .filter((m) => m.user === userid)
+            .map((m) => {
+              return m;
+            });
+          if (player.team == data.awayTeam) {
+            data.scoreValidated = true;
+            data.scoreSubmittedBy = userid;
+            data
+              .save(data)
+              .then(async (data) => {
+                return res.send(await returnMatch(data));
+              })
+              .catch((err) => {
+                return res.status(500).send({
+                  message: err.message || 'Some error occurred while creating the match.',
+                });
+              });
+          } else {
+            return res
+              .status(404)
+              .send({ message: 'can not validate because the user is not from the opposite team for match : ' + id });
+          }
+        } else {
+          return res.status(404).send({ message: 'match is still ongoing  with id : ' + id });
+        }
+      }
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: 'Error validating score for match with id=' + id,
+      });
+    });
+
 };
