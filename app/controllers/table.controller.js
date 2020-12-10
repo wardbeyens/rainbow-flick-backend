@@ -196,11 +196,12 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
     console.log('result : ' + result);
     return result[0];
   } catch (error) {
-    return res.status(404).send({
+    return res.status(400).send({
       message: 'Error when searching for matches on table : ' + table,
     });
   }
 };
+
 exports.overview = async (req, res) => {
   const datum = req.params.datum;
   console.log('datum : ' + datum);
