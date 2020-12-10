@@ -7,6 +7,11 @@ const Team = db.team;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
 
+const rewardScore = {
+  won: 100,
+  lost: 25,
+};
+
 returnMatches = async (data) => {
   let returnMatchesArray = [];
   for (let i = 0; i < data.length; i++) {
@@ -45,6 +50,8 @@ returnMatchObject = async (data) => {
     scoreValidated: data.scoreValidated,
     requirementsReached: data.requirementsReached,
     matchType: data.matchType,
+    homeTeamPoints: data.homeTeamPoints,
+    awayTeamPoints: data.awayTeamPoints,
   };
 };
 //helper function to return matchObject
@@ -557,13 +564,89 @@ exports.start = async (req, res) => {
 
 exports.end = async (req, res) => {
   const id = req.params.id;
-
+  console.log('end macht');
   Match.findById(id)
     .then(async (data) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         data.dateTimeEnd = new Date();
+
+        let homeTeam = data.homeTeam;
+        let awayTeam = data.awayTeam;
+        console.log('teams');
+
+        let matchesHome = []; //queryMatchesLast30Days(homeTeam);
+        let matchesAway = []; //queryMatchesLast30Days(awayTeam);
+        console.log('begin filter');
+        let homeTeamWonMatches = matchesHome.filter((match) => {
+          let score = match.score;
+          let finalScore = score[score.length - 1];
+          if (finalScore.scoreHome > finalScore.scoreAway) {
+            return match.homeTeam == homeTeam;
+          } else {
+            return match.awayTeam == homeTeam;
+          }
+        });
+        let awayTeamWonMatches = matchesAway.filter((match) => {
+          let score = match.score;
+          let finalScore = score[score.length - 1];
+          if (finalScore.scoreHome > finalScore.scoreAway) {
+            return match.homeTeam == awayTeam;
+          } else {
+            return match.awayTeam == awayTeam;
+          }
+        });
+        console.log('filtert');
+
+        let ratingHomeTeam = homeTeamWonMatches.length / matchesHome.length;
+        let ratingAwayTeam = awayTeamWonMatches.length / matchesAway.length;
+        console.log('rating calculated');
+
+        let currentMatchsSCore = data.score[data.score.length - 1];
+        let homeTeamWon;
+        let awayTeamWon;
+        if (currentMatchsSCore !== undefined) {
+          if (currentMatchsSCore.scoreHome > currentMatchsSCore.scoreAway) {
+            homeTeamWon = true;
+            awayTeamWon = false;
+          } else if (currentMatchsSCore.scoreAway > currentMatchsSCore.scoreHome) {
+            awayTeamWon = true;
+            homeTeamWon = false;
+          } else {
+            awayTeamWon = false;
+            homeTeamWon = false;
+          }
+          console.log('who won');
+
+          baseScoreHome = homeTeamWon ? rewardScore.won : rewardScore.lost;
+          baseScoreAway = awayTeamWon ? rewardScore.won : rewardScore.lost;
+
+          if (Number.isNaN(ratingHomeTeam)) {
+            ratingHomeTeam = 0.5;
+          }
+          if (Number.isNaN(ratingAwayTeam)) {
+            ratingAwayTeam = 0.5;
+          }
+          if (matchesHome.length == 0) {
+            matchesHome.push({ name: 'machesHomeFiller' });
+          }
+          if (matchesAway.length == 0) {
+            matchesAway.push({ name: 'matchesAwayFiller' });
+          }
+          console.log('baseScoreHome : ' + baseScoreHome);
+          console.log('baseScoreAway : ' + baseScoreAway);
+          console.log('ratingHomeTeam : ' + ratingHomeTeam);
+          console.log('ratingAwayTeam : ' + ratingAwayTeam);
+          console.log('matchesHome.length : ' + matchesHome.length);
+          console.log('matchesAway.length : ' + matchesAway.length);
+          let pointsEarnedHome = (1 + ratingAwayTeam) * baseScoreHome * (matchesHome.length * 0.01);
+          let pointsEarnedAway = (1 + ratingHomeTeam) * baseScoreAway * (matchesAway.length * 0.01);
+          console.log('points');
+
+          data.homeTeamPoints = pointsEarnedHome;
+          data.awayTeamPoints = pointsEarnedAway;
+        }
         data
           .save(data)
           .then(async (data) => {
