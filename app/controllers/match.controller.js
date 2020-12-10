@@ -561,7 +561,15 @@ exports.start = async (req, res) => {
       });
     });
 };
+queryMatchesLast30Days = async (team) => {
+  let date = new Date();
+  date.setDate(date.getDate() - 30);
 
+  return await Match.find({ $or: [{ homeTeam: team }, { awayTeam: team }] })
+    .where('dateTimeEnd')
+    .gt(date)
+    .exec();
+};
 exports.end = async (req, res) => {
   const id = req.params.id;
   console.log('end macht');
@@ -576,25 +584,40 @@ exports.end = async (req, res) => {
         let awayTeam = data.awayTeam;
         console.log('teams');
 
-        let matchesHome = []; //queryMatchesLast30Days(homeTeam);
-        let matchesAway = []; //queryMatchesLast30Days(awayTeam);
+        let matchesHome = await queryMatchesLast30Days(homeTeam);
+        let matchesAway = await queryMatchesLast30Days(awayTeam);
+        console.log('machesHome : ' + matchesHome);
+        console.log('machesHome : ' + matchesHome);
         console.log('begin filter');
-        let homeTeamWonMatches = matchesHome.filter((match) => {
-          let score = match.score;
-          let finalScore = score[score.length - 1];
-          if (finalScore.scoreHome > finalScore.scoreAway) {
-            return match.homeTeam == homeTeam;
+        let homeTeamWonMatches = matchesHome.filter((m) => {
+          let score = m.score;
+          console.log('score');
+          if (score.length != 0) {
+            console.log('score if');
+            let finalScore = score[score.length - 1];
+            if (finalScore.scoreHome > finalScore.scoreAway) {
+              return m.homeTeam == homeTeam;
+            } else {
+              return m.awayTeam == homeTeam;
+            }
           } else {
-            return match.awayTeam == homeTeam;
+            return false;
           }
         });
-        let awayTeamWonMatches = matchesAway.filter((match) => {
-          let score = match.score;
-          let finalScore = score[score.length - 1];
-          if (finalScore.scoreHome > finalScore.scoreAway) {
-            return match.homeTeam == awayTeam;
+        console.log('homeTeamWonMatches filter done beginning awayTeamWonMatches filter');
+        let awayTeamWonMatches = matchesAway.filter((m) => {
+          let score = m.score;
+          console.log('score');
+          if (score.length != 0) {
+            console.log('score if');
+            let finalScore = score[score.length - 1];
+            if (finalScore.scoreHome > finalScore.scoreAway) {
+              return m.homeTeam == awayTeam;
+            } else {
+              return m.awayTeam == awayTeam;
+            }
           } else {
-            return match.awayTeam == awayTeam;
+            return false;
           }
         });
         console.log('filtert');
