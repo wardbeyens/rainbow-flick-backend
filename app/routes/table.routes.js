@@ -2,9 +2,15 @@ module.exports = (app) => {
   const tables = require('../controllers/table.controller.js');
   const { authJwt } = require('../middlewares');
   var router = require('express').Router();
-
+  const multer = require('multer');
+  const multerConfig = require('../config/multer.config');
   // Create a new table
-  router.post('/', [authJwt.verifyToken, authJwt.hasPermission('TABLE_CREATE')], tables.create);
+  router.post(
+    '/',
+    [authJwt.verifyToken, authJwt.hasPermission('TABLE_CREATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    tables.create
+  );
 
   // Retrieve all tables
   router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('TABLE_READ')], tables.findAll);

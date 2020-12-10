@@ -4,6 +4,7 @@ const Match = db.match;
 
 //helper function to return userObject
 returnTable = (data) => {
+  console.log(data);
   return {
     id: data._id || data.id,
     name: data.name,
@@ -38,16 +39,23 @@ exports.create = (req, res) => {
   }
 
   // Create a table
-  const table = new Table({
+  let table = new Table({
     name: req.body.name,
     location: req.body.location,
-    imageUrl: req.body.imageUrl,
     contactName: req.body.contactName,
     contactPhone: req.body.contactPhone,
     description: req.body.description,
     inUse: req.body.inUse,
   });
-
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+  if (imageFilePaths[0]) {
+    console.log('1');
+    table.imageUrl = imageFilePaths[0];
+  } else {
+    console.log('2');
+    table.imageUrl = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+  }
+  console.log(table);
   // Save table in the database
   table
     .save(table)
