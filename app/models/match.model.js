@@ -4,6 +4,8 @@
 // const Score = require('./score.model');
 // const Team = require('./team.model');
 
+const matchType = require('../const/matchType');
+
 module.exports = (mongoose) => {
   const Match = mongoose.model(
     'Match',
@@ -33,7 +35,7 @@ module.exports = (mongoose) => {
         scoreSubmittedBy: String,
         scoreValidated: Boolean,
         requirementsReached: Boolean,
-        matchType: { type: { name: String, minNumberPlayersPerTeam: Number }, default: false },
+        matchType: { type: { name: String, minNumberPlayersPerTeam: Number }, default: matchType.fun },
       },
       { timestamps: true }
     )

@@ -1,5 +1,6 @@
 const db = require('../models');
 const Table = db.table;
+const Match = db.match;
 
 //helper function to return userObject
 returnTable = (data) => {
@@ -130,6 +131,67 @@ exports.delete = (req, res) => {
     .catch((err) => {
       return res.status(500).send({
         message: 'Could not delete table with id=' + id,
+      });
+    });
+};
+
+matchOnTable2 = async (table, dateTimePlanned) => {
+  console.log('matchOnTable');
+  let datum = new Date(dateTimePlanned);
+  let year = datum.getFullYear();
+  let month = datum.getMonth();
+  let day = datum.getDate();
+  console.log('datum : ' + datum);
+  console.log('year : ' + year);
+  console.log('month : ' + month);
+  console.log('day : ' + day);
+  let gteDatum = new Date(year, month, day);
+  console.log('gteDatum : ' + gteDatum);
+  day = day + 1;
+  let ltDatum = new Date(year, month, day);
+  console.log('ltDatum : ' + ltDatum);
+
+  const query = Match.find();
+  let result;
+  try {
+    result = await query.where('table').equals(table).where('dateTimeStart').ne(null).where('dateTimeEnd').equals(null).where('dateTimePlanned').gte(gteDatum).lt(ltDatum).exec();
+    if(!Object.keys(obj).length){
+      gteDatum=new Date();
+      result = await query.where('table').equals(table).where('dateTimePlanned').gte(gteDatum).lt(ltDatum).sort("dateTimePlanned").exec();
+      Match.find({"dateTimePlanned":{$gte: isoDate,$lt: isoDate}}).sort({"time":1}).limit(1)
+
+    }
+    console.log('result : ' + result);
+    return result;
+  } catch (error) {
+    return res.status(404).send({
+      message: 'Error when searching for matches on table : ' + table,
+    });
+  }
+};
+exports.overview = async (req, res) => {
+  const datum = req.params.datum;
+  console.log('datum : ' + datum);
+  Table.find()
+    .then(async (data) => {
+      console.log(data);
+      console.log(data.length);
+      var tables = data;
+      for (var i = 0; i < data.length; i++) {
+        tables[i].match = await matchOnTable2(data[i]._id, datum);
+        console.log('data[i].matches : ' + data[i].matches);
+        console.log('tables : ' + tables);
+      }
+      console.log('tables2 : ' + tables);
+      var responseObject = {
+        date: datum,
+        tables: tables,
+      };
+      return res.send(responseObject);
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving tables.',
       });
     });
 };

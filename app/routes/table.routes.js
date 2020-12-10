@@ -11,6 +11,7 @@ module.exports = (app) => {
 
   // Retrieve a single table with id
   router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('TABLE_READ')], tables.findOne);
+  router.get('/overview/:datum', [authJwt.verifyToken, authJwt.hasPermission('TABLE_READ')], tables.overview);
 
   // Update a table with id
   router.put('/:id', [authJwt.verifyToken, authJwt.hasPermission('TABLE_UPDATE')], tables.update);
