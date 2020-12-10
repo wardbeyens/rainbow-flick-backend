@@ -152,7 +152,7 @@ exports.create = (req, res) => {
 
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   // Create a user
@@ -186,7 +186,7 @@ exports.create = (req, res) => {
     if (response.length == 0) {
       storeUserInDatabase(user, res);
     } else {
-      return res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
+      return res.status(400).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
 };
@@ -206,7 +206,7 @@ exports.authenticate = (req, res) => {
 
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   User.findOne({
@@ -240,7 +240,7 @@ exports.findOne = (req, res) => {
 
   User.findById(id)
     .then((data) => {
-      if (!data) return res.status(404).send({ message: 'Not found user with id ' + id });
+      if (!data) return res.status(400).send({ message: 'Not found user with id ' + id });
       else return res.send(returnUserLimited(data));
     })
     .catch((err) => {
@@ -253,7 +253,7 @@ exports.update = (req, res) => {
   let validationMessages = validateUserFields(req, false);
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   const id = req.params.id;
@@ -261,7 +261,7 @@ exports.update = (req, res) => {
   User.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
     .then((data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot update user with id=${id}. Maybe user was not found!`,
         });
       } else return res.send(returnUserWithToken(data));
@@ -277,7 +277,7 @@ exports.update = (req, res) => {
 exports.findAll = (req, res) => {
   User.find({})
     .then((users) => {
-      if (!users) return res.status(404).send({ message: 'No users found' });
+      if (!users) return res.status(400).send({ message: 'No users found' });
       return res.send(returnUsers(users));
     })
     .catch((err) => {
@@ -290,13 +290,13 @@ exports.delete = (req, res) => {
   const id = req.params.id;
 
   // if (req.authUser._id == id) {
-  //   return res.status(404).send({ message: "Can't delete own account" });
+  //   return res.status(400).send({ message: "Can't delete own account" });
   // }
 
   User.findByIdAndRemove(id)
     .then((data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot delete user with id=${id}. Maybe user was not found!`,
         });
       } else {
@@ -315,7 +315,7 @@ exports.createAdmin = (req, res) => {
   let validationMessages = validateUserFields(req, true);
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   // Create a user
@@ -335,7 +335,7 @@ exports.createAdmin = (req, res) => {
     if (response.length == 0) {
       storeUserInDatabase(user, res);
     } else {
-      return res.status(404).send({ message: `Already exists an account with this email: ${user.email}` });
+      return res.status(400).send({ message: `Already exists an account with this email: ${user.email}` });
     }
   });
 };
@@ -347,7 +347,7 @@ exports.findOneLocal = async (id) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving user with id: ' + id });
   }
-  if (!response) return res.status(404).send({ message: 'Not found user with id ' + id });
+  if (!response) return res.status(400).send({ message: 'Not found user with id ' + id });
 
   return returnUserLimitedLocal(response);
 };
