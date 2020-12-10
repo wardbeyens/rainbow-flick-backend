@@ -6,7 +6,6 @@ const Team = db.team;
 // const Player = db.player;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
-const { authJwt } = require('../middlewares');
 
 returnMatches = async (data) => {
   let returnMatchesArray = [];
@@ -491,7 +490,7 @@ exports.leave = async (req, res) => {
         console.log(data.dateTimeStart !== undefined);
         if (data.dateTimeStart !== undefined) {
           console.log('in if');
-          let userid = await authJwt.getUserFromToken(req);
+          let userid = req.authUser._id;
           console.log('userid : ' + userid);
           var players = data.players;
           console.log(players);

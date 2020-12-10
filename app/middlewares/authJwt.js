@@ -119,26 +119,12 @@ hasPermissionOrIsUserItself = (permission) => {
     });
   };
 };
-getUserFromToken = async (req) => {
-  if (!isTokenPresent(req)) {
-    return res.status(401).send({ message: 'No token provided!' });
-  }
-  let token = extractToken(req);
-  return await jwt.verify(token, config.secret, (err, decoded) => {
-    if (err) {
-      console.log(err);
-      return res.status(403).send({ message: 'Access denied.' });
-    }
-    console.log(decoded.id);
-    return decoded.id;
-  });
-};
+
 const authJwt = {
   verifyToken,
   verifyTokenIfPresent,
   hasPermission,
   hasPermissionOrIsUserItself,
   hasPermissionMatchScore,
-  getUserFromToken,
 };
 module.exports = authJwt;
