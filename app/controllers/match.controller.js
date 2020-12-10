@@ -120,7 +120,7 @@ exports.create = async (req, res) => {
   let validationMessages = await validateMatchFields(req, res);
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   // Create a Match
@@ -173,7 +173,7 @@ exports.findOne = async (req, res) => {
 
   Match.findById(id)
     .then(async (data) => {
-      if (!data) return res.status(404).send({ message: 'Not found match with id ' + id });
+      if (!data) return res.status(400).send({ message: 'Not found match with id ' + id });
       else return res.send(await returnMatch(data));
     })
     .catch((err) => {
@@ -186,7 +186,7 @@ exports.update = async (req, res) => {
   // let validationMessages = validateMatchFields(req);
 
   // if (validationMessages.length != 0) {
-  //   return res.status(404).send({ messages: validationMessages });
+  //   return res.status(400).send({ messages: validationMessages });
   // }
 
   const id = req.params.id;
@@ -194,7 +194,7 @@ exports.update = async (req, res) => {
   Match.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
     .then(async (data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot update match with id=${id}. Maybe match was not found!`,
         });
       } else return res.send(await returnMatch(data));
@@ -213,7 +213,7 @@ exports.delete = async (req, res) => {
   Match.findByIdAndRemove(id)
     .then((data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot delete match with id=${id}. Maybe match was not found!`,
         });
       } else {
@@ -245,7 +245,7 @@ exports.updateScore = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
   const id = req.params.id;
 
@@ -264,7 +264,7 @@ exports.updateScore = async (req, res) => {
       Match.findByIdAndUpdate(id, data, { new: true, useFindAndModify: false })
         .then(async (data) => {
           if (!data) {
-            return res.status(404).send({
+            return res.status(400).send({
               message: `Cannot update match with id=${id}. Maybe match was not found!`,
             });
           } else return res.send(await returnMatch(data));
@@ -329,7 +329,7 @@ exports.challengeTeam = async (req, res) => {
     validationMessages.push('Er is al een match bezig of gaat beginnen.');
   }
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
   var naam = '';
   Team.findById(req.body.homeTeam)
@@ -377,14 +377,14 @@ exports.join = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
   const id = req.params.id;
   const user = req.body.user;
 
   Match.findById(id).then((match) => {
     if (!match) {
-      return res.status(404).send({
+      return res.status(400).send({
         message: `Cannot update match with id=${id}. Because match was not found!`,
       });
     } else {
@@ -397,7 +397,7 @@ exports.join = async (req, res) => {
       if (found.length == 0) {
         Team.findById(match.homeTeam).then((ownTeam) => {
           if (!ownTeam) {
-            return res.status(404).send({
+            return res.status(400).send({
               message: `Cannot update match with id=${id}. Because HomeTeam was not found!`,
             });
           } else {
@@ -409,7 +409,7 @@ exports.join = async (req, res) => {
             if (found.length == 0) {
               Team.findById(match.awayTeam).then((awayTeam) => {
                 if (!awayTeam) {
-                  return res.status(404).send({
+                  return res.status(400).send({
                     message: `Cannot update match with id=${id}. Because AwayTeam was not found!`,
                   });
                 } else {
@@ -485,7 +485,7 @@ exports.leave = async (req, res) => {
     .then(async (data) => {
       console.log('data : ' + data);
       if (!data) {
-        return res.status(404).send({ message: 'Not found match with id ' + id });
+        return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         console.log(data.dateTimeStart !== undefined);
         if (data.dateTimeStart !== undefined) {
@@ -527,7 +527,7 @@ exports.start = async (req, res) => {
   Match.findById(id)
     .then(async (data) => {
       if (!data) {
-        return res.status(404).send({ message: 'Not found match with id ' + id });
+        return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         if (data.requirementsReached) {
           data.dateTimeStart = new Date();
@@ -561,7 +561,7 @@ exports.end = async (req, res) => {
   Match.findById(id)
     .then(async (data) => {
       if (!data) {
-        return res.status(404).send({ message: 'Not found match with id ' + id });
+        return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         data.dateTimeEnd = new Date();
         data
@@ -590,7 +590,7 @@ exports.validateMatch = async (req, res) => {
     .then(async (data) => {
       console.log(data);
       if (!data) {
-        return res.status(404).send({ message: 'Not found match with id ' + id });
+        return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         if (data.dateTimeEnd !== undefined && data.scoreValidated !== true) {
           console.log('datum');
@@ -618,11 +618,11 @@ exports.validateMatch = async (req, res) => {
               });
           } else {
             return res
-              .status(404)
+              .status(400)
               .send({ message: 'can not validate because the user is not from the opposite team for match : ' + id });
           }
         } else {
-          return res.status(404).send({ message: 'match cannot be validated : ' + id });
+          return res.status(400).send({ message: 'match cannot be validated : ' + id });
         }
       }
     })

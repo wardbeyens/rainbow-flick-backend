@@ -104,7 +104,7 @@ exports.create = async (req, res) => {
   team.participants = [req.authUser.id];
 
   if (response.length !== 0) {
-    return res.status(404).send({ message: `Already exists a Team with this name: ${team.name}` });
+    return res.status(400).send({ message: `Already exists a Team with this name: ${team.name}` });
   } else {
     try {
       let newTeam = await team.save(team);
@@ -125,7 +125,7 @@ exports.findAll = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving teams' });
   }
-  if (!response) return res.status(404).send({ message: 'No teams found' });
+  if (!response) return res.status(400).send({ message: 'No teams found' });
 
   return res.send(await returnTeams(response));
 };
@@ -139,7 +139,7 @@ exports.findOne = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + id });
   }
-  if (!response) return res.status(404).send({ message: 'Not found team with id ' + id });
+  if (!response) return res.status(400).send({ message: 'Not found team with id ' + id });
 
   return res.send(await returnTeam(response));
 };
@@ -152,7 +152,7 @@ exports.findOneByName = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with name: ' + name });
   }
-  if (response.length == 0) return res.status(404).send({ message: 'Not found team with name ' + name });
+  if (response.length == 0) return res.status(400).send({ message: 'Not found team with name ' + name });
   return res.send(await returnTeam(response[0]));
 };
 
@@ -165,7 +165,7 @@ exports.delete = async (req, res) => {
     return res.status(500).send({ message: err.message || 'Could not delete team with id=' + id });
   }
   if (!response)
-    return res.status(404).send({
+    return res.status(400).send({
       message: `Cannot delete team with id=${id}. Maybe team was not found!`,
     });
   return res.send({
@@ -211,7 +211,7 @@ exports.join = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + teamID });
   }
-  if (!response) return res.status(404).send({ message: 'Not found team with id ' + teamID });
+  if (!response) return res.status(400).send({ message: 'Not found team with id ' + teamID });
 
   let participants = response.participants;
   let requestedParticipants = response.requestedParticipants;
@@ -260,7 +260,7 @@ exports.leave = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + teamID });
   }
-  if (!response) return res.status(404).send({ message: 'Not found team with id ' + teamID });
+  if (!response) return res.status(400).send({ message: 'Not found team with id ' + teamID });
 
   let participants = response.participants;
   let requestedParticipants = response.requestedParticipants;
@@ -310,7 +310,7 @@ exports.accept = async (req, res) => {
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + teamID });
   }
-  if (!response) return res.status(404).send({ message: 'Not found team with id ' + teamID });
+  if (!response) return res.status(400).send({ message: 'Not found team with id ' + teamID });
 
   let participants = response.participants;
   let requestedParticipants = response.requestedParticipants;

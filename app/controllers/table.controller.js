@@ -33,7 +33,7 @@ exports.create = (req, res) => {
 
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ messages: validationMessages });
+    return res.status(400).send({ messages: validationMessages });
   }
 
   // Create a table
@@ -51,7 +51,7 @@ exports.create = (req, res) => {
   table
     .save(table)
     .then((data) => {
-      return res.send(returnTable(data));
+      return res.send({ result: returnTable(data) });
     })
     .catch((err) => {
       return res.status(500).send({
@@ -63,7 +63,7 @@ exports.create = (req, res) => {
 exports.findAll = (req, res) => {
   Table.find()
     .then((data) => {
-      return res.send(data.map((d) => returnTable(d)));
+      return res.send({ results: data.map((d) => returnTable(d)) });
     })
     .catch((err) => {
       return res.status(500).send({
@@ -78,8 +78,8 @@ exports.findOne = (req, res) => {
 
   Table.findById(id)
     .then((data) => {
-      if (!data) return res.status(404).send({ message: 'Not found table with id ' + id });
-      else return res.send(returnTable(data));
+      if (!data) return res.status(400).send({ message: 'Not found table with id ' + id });
+      else return res.send({ result: returnTable(data) });
     })
     .catch((err) => {
       return res.status(500).send({ message: 'Error retrieving table with id=' + id });
@@ -99,10 +99,10 @@ exports.update = (req, res) => {
   Table.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
     .then((data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot update table with id=${id}. Maybe table was not found!`,
         });
-      } else return res.send(returnTable(data));
+      } else return res.send({ result: returnTable(data) });
     })
     .catch((err) => {
       return res.status(500).send({
@@ -118,7 +118,7 @@ exports.delete = (req, res) => {
   Table.findByIdAndRemove(id)
     .then((data) => {
       if (!data) {
-        return res.status(404).send({
+        return res.status(400).send({
           message: `Cannot delete table with id=${id}. Maybe table was not found!`,
         });
       } else {
