@@ -29,6 +29,8 @@ module.exports = (mongoose) => {
         scoreValidated: Boolean,
         requirementsReached: Boolean,
         matchType: { type: { name: String, minNumberPlayersPerTeam: Number }, default: matchType.fun },
+        homeTeamPoints: String,
+        awayTeamPoints: String,
       },
       { timestamps: true }
     )
