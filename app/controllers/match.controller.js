@@ -282,9 +282,9 @@ exports.updateScore = async (req, res) => {
       });
     });
 };
-function isEmptyObject(obj) {
+isEmptyObject = (obj) => {
   return !Object.keys(obj).length;
-}
+};
 matchOnTable = async (table, dateTimePlanned) => {
   let dateTimePlannedLowerLimit = new Date(dateTimePlanned - 10 * 60000);
   let dateTimePlannedUperLimit = new Date(dateTimePlanned + 10 * 60000);
