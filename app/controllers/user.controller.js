@@ -149,6 +149,7 @@ returnUsers = (data) => {
 // Create and Save a new user
 exports.create = (req, res) => {
   let validationMessages = validateUserFields(req, true);
+
   // If request not valid, return messages
   if (validationMessages.length != 0) {
     return res.status(404).send({ message: validationMessages });
@@ -163,11 +164,19 @@ exports.create = (req, res) => {
     password: bcrypt.hashSync(req.body.password, 8),
   });
 
-  if (req.body.imageURL) {
-    user.imageURL = req.body.imageURL;
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+
+  if (imageFilePaths[0]) {
+    user.imageURL = imageFilePaths[0];
   } else {
     user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
+
+  // if (req.body.imageURL) {
+  //   user.imageURL = req.body.imageURL;
+  // } else {
+  //   user.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+  // }
 
   user.permissions = [...userPermissions];
 
@@ -280,9 +289,9 @@ exports.findAll = (req, res) => {
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  if (req.authUser._id == id) {
-    return res.status(404).send({ message: "Can't delete own account" });
-  }
+  // if (req.authUser._id == id) {
+  //   return res.status(404).send({ message: "Can't delete own account" });
+  // }
 
   User.findByIdAndRemove(id)
     .then((data) => {
