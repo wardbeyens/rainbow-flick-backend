@@ -41,6 +41,19 @@ returnTeam = async (data) => {
   };
 };
 
+returnTeamLocal = async (data) => {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    location: data.location,
+    companyName: data.companyName,
+    imageURL: data.imageURL,
+    captain: await returnUser(data.captain),
+    participants: await returnParticipants(data.participants),
+    requestedParticipants: await returnParticipants(data.requestedParticipants),
+  };
+};
+
 returnTeams = async (d) => {
   var formattedTeams = [];
   for (let index = 0; index < d.length; index++) {
@@ -209,7 +222,7 @@ exports.join = async (req, res) => {
     });
   } else if (requestedParticipants.includes(userID)) {
     return res.status(400).send({
-      message: 'Je hebt je al aangevraagd om je bij dit team aan te sluiten.',
+      message: 'Je hebt al een aanvraag gestuurd om je bij dit team aan te sluiten.',
     });
   } else {
     requestedParticipants.push(userID);
@@ -219,6 +232,56 @@ exports.join = async (req, res) => {
     response = await Team.findByIdAndUpdate(
       teamID,
       { requestedParticipants: requestedParticipants },
+      { new: true, useFindAndModify: false }
+    );
+  } catch (err) {
+    return res.status(500).send({
+      message: 'Error updating team with id=' + id,
+    });
+  }
+  let teamFormatted = await returnTeam(response);
+  return res.send(teamFormatted);
+};
+
+exports.leave = async (req, res) => {
+  if (!req.body) {
+    return res.status(400).send({
+      message: 'Data to update can not be empty!',
+    });
+  }
+
+  const teamID = req.params.id;
+
+  const userID = req.body.id;
+
+  let response;
+  try {
+    response = await Team.findById(teamID);
+  } catch (err) {
+    return res.status(500).send({ message: err.message || 'Error retrieving team with id: ' + teamID });
+  }
+  if (!response) return res.status(404).send({ message: 'Not found team with id ' + teamID });
+
+  let participants = response.participants;
+  let requestedParticipants = response.requestedParticipants;
+
+  if (requestedParticipants.includes(userID) || participants.includes(userID)) {
+    requestedParticipants = requestedParticipants.filter((value, index, arr) => {
+      return value.toString() !== userID.toString();
+    });
+    participants = participants.filter((value, index, arr) => {
+      return value.toString() !== userID.toString();
+    });
+  } else {
+    return res.status(400).send({
+      message: 'Je bent geen lid van dit team, no worries.',
+    });
+  }
+
+  try {
+    response = await Team.findByIdAndUpdate(
+      teamID,
+      { requestedParticipants: requestedParticipants, participants: participants },
       { new: true, useFindAndModify: false }
     );
   } catch (err) {
@@ -258,6 +321,9 @@ exports.accept = async (req, res) => {
     });
   } else {
     participants.push(userID);
+    requestedParticipants = requestedParticipants.filter((value, index, arr) => {
+      return value.toString() !== userID.toString();
+    });
   }
 
   // een restrictie die we kunnen toevoegen maar wrs nu te veel is
@@ -272,7 +338,7 @@ exports.accept = async (req, res) => {
   try {
     response = await Team.findByIdAndUpdate(
       teamID,
-      { participants: participants },
+      { requestedParticipants: requestedParticipants, participants: participants },
       { new: true, useFindAndModify: false }
     );
   } catch (err) {
@@ -291,5 +357,5 @@ exports.findOneLocal = async (id) => {
   } catch (err) {
     return {};
   }
-  return returnTeam(response);
+  return returnTeamLocal(response);
 };
