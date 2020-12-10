@@ -321,6 +321,9 @@ exports.accept = async (req, res) => {
     });
   } else {
     participants.push(userID);
+    requestedParticipants = requestedParticipants.filter((value, index, arr) => {
+      return value.toString() !== userID.toString();
+    });
   }
 
   // een restrictie die we kunnen toevoegen maar wrs nu te veel is
@@ -335,7 +338,7 @@ exports.accept = async (req, res) => {
   try {
     response = await Team.findByIdAndUpdate(
       teamID,
-      { participants: participants },
+      { requestedParticipants: requestedParticipants, participants: participants },
       { new: true, useFindAndModify: false }
     );
   } catch (err) {
