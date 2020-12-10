@@ -121,7 +121,7 @@ exports.create = async (req, res) => {
   let validationMessages = await validateMatchFields(req, res);
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
 
   // Create a Match
@@ -187,7 +187,7 @@ exports.update = async (req, res) => {
   // let validationMessages = validateMatchFields(req);
 
   // if (validationMessages.length != 0) {
-  //   return res.status(404).send({ message: validationMessages });
+  //   return res.status(404).send({ messages: validationMessages });
   // }
 
   const id = req.params.id;
@@ -246,7 +246,7 @@ exports.updateScore = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   const id = req.params.id;
 
@@ -330,7 +330,7 @@ exports.challengeTeam = async (req, res) => {
     validationMessages.push('Er is al een match bezig of gaat beginnen.');
   }
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   var naam = '';
   Team.findById(req.body.homeTeam)
@@ -378,7 +378,7 @@ exports.join = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   const id = req.params.id;
   const user = req.body.user;
