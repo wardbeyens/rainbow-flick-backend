@@ -6,7 +6,6 @@ const Team = db.team;
 // const Player = db.player;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
-const { authJwt } = require('../middlewares');
 
 returnMatches = async (data) => {
   let returnMatchesArray = [];
@@ -121,7 +120,7 @@ exports.create = async (req, res) => {
   let validationMessages = await validateMatchFields(req, res);
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
 
   // Create a Match
@@ -187,7 +186,7 @@ exports.update = async (req, res) => {
   // let validationMessages = validateMatchFields(req);
 
   // if (validationMessages.length != 0) {
-  //   return res.status(404).send({ message: validationMessages });
+  //   return res.status(404).send({ messages: validationMessages });
   // }
 
   const id = req.params.id;
@@ -246,7 +245,7 @@ exports.updateScore = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   const id = req.params.id;
 
@@ -330,7 +329,7 @@ exports.challengeTeam = async (req, res) => {
     validationMessages.push('Er is al een match bezig of gaat beginnen.');
   }
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   var naam = '';
   Team.findById(req.body.homeTeam)
@@ -378,7 +377,7 @@ exports.join = async (req, res) => {
   }
 
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
   const id = req.params.id;
   const user = req.body.user;
@@ -491,7 +490,7 @@ exports.leave = async (req, res) => {
         console.log(data.dateTimeStart !== undefined);
         if (data.dateTimeStart !== undefined) {
           console.log('in if');
-          let userid = await authJwt.getUserFromToken(req);
+          let userid = req.authUser._id;
           console.log('userid : ' + userid);
           var players = data.players;
           console.log(players);
