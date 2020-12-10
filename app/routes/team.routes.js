@@ -26,7 +26,7 @@ module.exports = (app) => {
 
   router.post('/:id/join', [authJwt.verifyToken, authJwt.hasPermission('TEAM_JOIN')], teams.join);
 
-  router.post('/:id/leave', [authJwt.verifyToken, authJwt.hasPermission('TEAM_JOIN')], teams.join);
+  router.post('/:id/leave', [authJwt.verifyToken, authJwt.hasPermission('TEAM_JOIN')], teams.leave);
 
   router.post('/:id/accept', [authJwt.verifyToken, authJwt.hasPermission('TEAM_ACCEPT')], teams.accept);
 
