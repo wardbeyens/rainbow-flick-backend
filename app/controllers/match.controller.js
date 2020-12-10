@@ -1,4 +1,4 @@
-const { team } = require('../models');
+const { team, match } = require('../models');
 const db = require('../models');
 const Match = db.match;
 const Score = db.score;
@@ -6,6 +6,7 @@ const Team = db.team;
 // const Player = db.player;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
+const { authJwt } = require('../middlewares');
 
 returnMatches = async (data) => {
   let returnMatchesArray = [];
@@ -281,6 +282,35 @@ exports.updateScore = async (req, res) => {
       });
     });
 };
+function isEmptyObject(obj) {
+  return !Object.keys(obj).length;
+}
+matchOnTable = async (table, dateTimePlanned) => {
+  let dateTimePlannedLowerLimit = new Date(dateTimePlanned - 10 * 60000);
+  let dateTimePlannedUperLimit = new Date(dateTimePlanned + 10 * 60000);
+
+  const query = Match.find();
+  let result;
+  try {
+    result = await query
+      .where('table')
+      .equals(table)
+      .where('dateTimePlanned')
+      .gt(dateTimePlannedLowerLimit)
+      .lt(dateTimePlannedUperLimit)
+      .where('dateTimeStart')
+      .ne(null)
+      .exec();
+
+    if (!isEmptyObject(result)) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return true;
+  }
+};
 
 exports.challengeTeam = async (req, res) => {
   let validationMessages = [];
@@ -296,7 +326,9 @@ exports.challengeTeam = async (req, res) => {
   if (!req.body.table) {
     validationMessages.push('tafel id is vereist.');
   }
-
+  if (await matchOnTable(req.body.table, req.body.dateTimePlanned)) {
+    validationMessages.push('Er is al een match bezig of gaat beginnen.');
+  }
   if (validationMessages.length != 0) {
     return res.status(404).send({ message: validationMessages });
   }
@@ -358,11 +390,11 @@ exports.join = async (req, res) => {
       });
     } else {
       var players = match.players;
-      var found = players.map((m) => {
-        if (m.user === user) {
-          return true;
-        }
-      });
+      let found = players
+        .filter((m) => m.user === user)
+        .map((m) => {
+          return m;
+        });
       if (found.length == 0) {
         Team.findById(match.homeTeam).then((ownTeam) => {
           if (!ownTeam) {
@@ -443,6 +475,96 @@ CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
     .catch((err) => {
       return res.status(500).send({
         message: err.message || 'Some error occurred while creating the match.',
+      });
+    });
+};
+
+exports.leave = async (req, res) => {
+  const id = req.params.id;
+  console.log('id : ' + id);
+  Match.findById(id)
+    .then(async (data) => {
+      console.log('data : ' + data);
+      if (!data) {
+        return res.status(404).send({ message: 'Not found match with id ' + id });
+      } else {
+        console.log(data.dateTimeStart !== undefined);
+        if (data.dateTimeStart !== undefined) {
+          console.log('in if');
+          let userid = await authJwt.getUserFromToken(req);
+          console.log('userid : ' + userid);
+          var players = data.players;
+          console.log(players);
+          let updatedPlayers = players
+            .filter((m) => m.user === userid)
+            .map((m) => {
+              return m;
+            });
+          console.log(updatedPlayers);
+          data.players = updatedPlayers;
+          data
+            .save(data)
+            .then(async (data) => {
+              console.log('saved');
+              return res.send(await returnMatch(data));
+            })
+            .catch((err) => {
+              return res.status(500).send({
+                message: err.message || 'Some error occurred while creating the match.',
+              });
+            });
+        }
+      }
+    })
+    .catch((err) => {
+      return res.status(500).send({ message: 'Error retrieving match with id=' + id });
+    });
+};
+
+exports.start = async (req, res) => {
+  const id = req.params.id;
+
+  Match.findById(id)
+    .then((data) => {
+      data.dateTimeStart = new Date();
+      data
+        .save(data)
+        .then(async (data) => {
+          return res.send(await returnMatch(data));
+        })
+        .catch((err) => {
+          return res.status(500).send({
+            message: err.message || 'Some error occurred while creating the match.',
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: 'Error updating match with id=' + id,
+      });
+    });
+};
+
+exports.end = async (req, res) => {
+  const id = req.params.id;
+
+  Match.findById(id)
+    .then((data) => {
+      data.dateTimeEnd = new Date();
+      data
+        .save(data)
+        .then(async (data) => {
+          return res.send(await returnMatch(data));
+        })
+        .catch((err) => {
+          return res.status(500).send({
+            message: err.message || 'Some error occurred while creating the match.',
+          });
+        });
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: 'Error updating match with id=' + id,
       });
     });
 };
