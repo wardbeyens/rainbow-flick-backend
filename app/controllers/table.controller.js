@@ -33,7 +33,7 @@ exports.create = (req, res) => {
 
   // If request not valid, return messages
   if (validationMessages.length != 0) {
-    return res.status(404).send({ message: validationMessages });
+    return res.status(404).send({ messages: validationMessages });
   }
 
   // Create a table
