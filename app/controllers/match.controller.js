@@ -391,7 +391,7 @@ exports.join = async (req, res) => {
     } else {
       var players = match.players;
       let found = players
-        .filter((m) => m.user === user)
+        .filter((m) => m.user.equals(userid))
         .map((m) => {
           return m;
         });
@@ -496,7 +496,7 @@ exports.leave = async (req, res) => {
           var players = data.players;
           console.log(players);
           let updatedPlayers = players
-            .filter((m) => m.user === userid)
+            .filter((m) => m.user.equals(userid))
             .map((m) => {
               return m;
             });
@@ -589,17 +589,22 @@ exports.validateMatch = async (req, res) => {
 
   Match.findById(id)
     .then(async (data) => {
+      console.log(data);
       if (!data) {
         return res.status(404).send({ message: 'Not found match with id ' + id });
       } else {
-        if (data.dateTimeEnd !== undefined) {
-          let userid = req.authUser;
+        if (data.dateTimeEnd !== undefined && data.scoreValidated !== true) {
+          console.log('datum');
+          let userid = req.authUser._id;
+          console.log('userID : ' + userid);
+          let players = data.players;
+          console.log('players : ' + players);
           let player = players
-            .filter((m) => m.user === userid)
+            .filter((m) => m.user.equals(userid))
             .map((m) => {
               return m;
             });
-          if (player.team == data.awayTeam) {
+          if (player[0].team.equals(data.awayTeam)) {
             data.scoreValidated = true;
             data.scoreSubmittedBy = userid;
             data
@@ -618,7 +623,7 @@ exports.validateMatch = async (req, res) => {
               .send({ message: 'can not validate because the user is not from the opposite team for match : ' + id });
           }
         } else {
-          return res.status(404).send({ message: 'match is still ongoing  with id : ' + id });
+          return res.status(404).send({ message: 'match cannot be validated : ' + id });
         }
       }
     })
@@ -627,5 +632,4 @@ exports.validateMatch = async (req, res) => {
         message: 'Error validating score for match with id=' + id,
       });
     });
-
 };
