@@ -1,11 +1,13 @@
 module.exports = (app) => {
   const users = require('../controllers/user.controller.js');
   const { authJwt } = require('../middlewares');
+  const multer = require('multer');
+  const multerConfig = require('../config/multer.config');
 
   var router = require('express').Router();
 
   // Create a new user
-  router.post('/register', users.create);
+  router.post('/register', multer({ storage: multerConfig.storage }).array('image'), users.create);
 
   // Authenticate user
   router.post('/authenticate', users.authenticate);
