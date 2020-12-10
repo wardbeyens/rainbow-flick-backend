@@ -502,17 +502,18 @@ exports.leave = async (req, res) => {
             });
           console.log(updatedPlayers);
           data.players = updatedPlayers;
-          data
-            .save(data)
-            .then(async (data) => {
-              console.log('saved');
-              return res.send(await returnMatch(data));
-            })
-            .catch((err) => {
-              return res.status(500).send({
-                message: err.message || 'Some error occurred while creating the match.',
-              });
-            });
+          CheckRequirementsReachedAndSaveMatch(data, req, res);
+          // data
+          //   .save(data)
+          //   .then(async (data) => {
+          //     console.log('saved');
+          //     return res.send(await returnMatch(data));
+          //   })
+          //   .catch((err) => {
+          //     return res.status(500).send({
+          //       message: err.message || 'Some error occurred while creating the match.',
+          //     });
+          //   });
         }
       }
     })
@@ -526,17 +527,23 @@ exports.start = async (req, res) => {
 
   Match.findById(id)
     .then((data) => {
-      data.dateTimeStart = new Date();
-      data
-        .save(data)
-        .then(async (data) => {
-          return res.send(await returnMatch(data));
-        })
-        .catch((err) => {
-          return res.status(500).send({
-            message: err.message || 'Some error occurred while creating the match.',
+      if (data.requirementsReached) {
+        data.dateTimeStart = new Date();
+        data
+          .save(data)
+          .then(async (data) => {
+            return res.send(await returnMatch(data));
+          })
+          .catch((err) => {
+            return res.status(500).send({
+              message: err.message || 'Some error occurred while creating the match.',
+            });
           });
+      } else {
+        return res.status(400).send({
+          message: 'The requirements to start a match were not reached.',
         });
+      }
     })
     .catch((err) => {
       return res.status(500).send({
