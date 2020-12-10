@@ -41,6 +41,19 @@ returnTeam = async (data) => {
   };
 };
 
+returnTeamLocal = async (data) => {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    location: data.location,
+    companyName: data.companyName,
+    imageURL: data.imageURL,
+    captain: await returnUser(data.captain),
+    participants: await returnParticipants(data.participants),
+    requestedParticipants: await returnParticipants(data.requestedParticipants),
+  };
+};
+
 returnTeams = async (d) => {
   var formattedTeams = [];
   for (let index = 0; index < d.length; index++) {
@@ -291,5 +304,5 @@ exports.findOneLocal = async (id) => {
   } catch (err) {
     return {};
   }
-  return returnTeam(response);
+  return returnTeamLocal(response);
 };
