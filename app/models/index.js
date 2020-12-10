@@ -14,11 +14,4 @@ db.table = require('./table.model.js')(mongoose);
 db.player = require('./player.model.js')(mongoose);
 db.score = require('./score.model.js')(mongoose);
 db.match = require('./match.model.js')(mongoose);
-
-// db.articles = require("./article.model.js")(mongoose);
-// db.roles = require("./role.model.js")(mongoose);
-// db.tags = require("./tag.model.js")(mongoose);
-// db.articlestatuses = require("./articlestatus.model.js")(mongoose);
-// db.comments = require('./comment.model.js')(mongoose);
-
 module.exports = db;

@@ -1,9 +1,3 @@
-// const Player = require('./player.model');
-// const Table = require('./table.model');
-// const MatchType = require('./../const/matchType');
-// const Score = require('./score.model');
-// const Team = require('./team.model');
-
 module.exports = (mongoose) => {
   const Match = mongoose.model(
     'Match',
