@@ -135,34 +135,58 @@ exports.delete = (req, res) => {
     });
 };
 
-matchOnTable2 = async (table, dateTimePlanned) => {
+matchOnTable2 = async (table, dateTimePlanned, res) => {
   console.log('matchOnTable');
   let datum = new Date(dateTimePlanned);
   let year = datum.getFullYear();
   let month = datum.getMonth();
   let day = datum.getDate();
-  console.log('datum : ' + datum);
-  console.log('year : ' + year);
-  console.log('month : ' + month);
-  console.log('day : ' + day);
+  // console.log('datum : ' + datum);
+  // console.log('year : ' + year);
+  // console.log('month : ' + month);
+  // console.log('day : ' + day);
   let gteDatum = new Date(year, month, day);
-  console.log('gteDatum : ' + gteDatum);
+  // console.log('gteDatum : ' + gteDatum);
   day = day + 1;
   let ltDatum = new Date(year, month, day);
-  console.log('ltDatum : ' + ltDatum);
+  // console.log('ltDatum : ' + ltDatum);
 
   const query = Match.find();
   let result;
   try {
-    result = await query.where('table').equals(table).where('dateTimeStart').ne(null).where('dateTimeEnd').equals(null).where('dateTimePlanned').gte(gteDatum).lt(ltDatum).exec();
-    if(!Object.keys(obj).length){
-      gteDatum=new Date();
-      result = await query.where('table').equals(table).where('dateTimePlanned').gte(gteDatum).lt(ltDatum).sort("dateTimePlanned").exec();
-      Match.find({"dateTimePlanned":{$gte: isoDate,$lt: isoDate}}).sort({"time":1}).limit(1)
-
+    result = await query
+      .where('table')
+      .equals(table)
+      .where('dateTimeStart')
+      .ne(null)
+      .where('dateTimeEnd')
+      .equals(null)
+      .where('dateTimePlanned')
+      .gte(gteDatum)
+      .lt(ltDatum)
+      .sort('dateTimePlanned')
+      .limit(1)
+      .exec();
+    // console.log(result);
+    if (!Object.keys(result).length) {
+      // console.log('niks bezig');
+      gteDatum = new Date();
+      year = gteDatum.getFullYear();
+      month = gteDatum.getMonth();
+      day = gteDatum.getDate();
+      gteDatum = new Date(year, month, day);
+      result = await query
+        .where('table')
+        .equals(table)
+        .where('dateTimePlanned')
+        .gte(gteDatum)
+        .lt(ltDatum)
+        .sort('dateTimePlanned')
+        .limit(1)
+        .exec();
     }
     console.log('result : ' + result);
-    return result;
+    return result[0];
   } catch (error) {
     return res.status(404).send({
       message: 'Error when searching for matches on table : ' + table,
@@ -175,17 +199,19 @@ exports.overview = async (req, res) => {
   Table.find()
     .then(async (data) => {
       console.log(data);
-      console.log(data.length);
-      var tables = data;
+      // console.log(data.length);
+      let tablesWithMatches = [];
       for (var i = 0; i < data.length; i++) {
-        tables[i].match = await matchOnTable2(data[i]._id, datum);
-        console.log('data[i].matches : ' + data[i].matches);
-        console.log('tables : ' + tables);
+        let table = data[i].toObject();
+        table.match = await matchOnTable2(data[i]._id, datum, res);
+        console.log('tables[i].match : ' + table.match);
+        tablesWithMatches.push(table);
+        // console.log('tables : ' + tables);
       }
-      console.log('tables2 : ' + tables);
+      console.log('tablesWithMatches : ' + tablesWithMatches);
       var responseObject = {
         date: datum,
-        tables: tables,
+        tables: tablesWithMatches,
       };
       return res.send(responseObject);
     })
