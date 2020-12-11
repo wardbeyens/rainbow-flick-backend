@@ -90,7 +90,7 @@ createToken = (user) => {
       permissions: user.permissions,
       firstName: user.firstName,
       lastName: user.lastName,
-      imageURL: imageURL,
+      imageURL: user.imageURL,
     },
     config.secret,
     {
