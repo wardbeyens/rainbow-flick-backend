@@ -217,7 +217,7 @@ exports.overview = async (req, res) => {
         date: datum,
         tables: tablesWithMatches,
       };
-      return res.send(responseObject);
+      return res.send({ result: responseObject });
     })
     .catch((err) => {
       return res.status(500).send({
