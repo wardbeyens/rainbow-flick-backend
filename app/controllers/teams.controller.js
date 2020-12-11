@@ -10,7 +10,6 @@ returnUser = async (id) => {
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
-    dateOfBirth: data.dateOfBirth,
     imageURL: data.imageURL,
   };
 };
@@ -58,16 +57,15 @@ returnTeams = async (d) => {
   var formattedTeams = [];
   for (let index = 0; index < d.length; index++) {
     let data = d[index];
-    let userData = await returnUser(data.captain);
+    // let userData = await returnUser(data.captain);
     let team = {
       id: data._id || data.id,
       name: data.name,
       location: data.location,
       companyName: data.companyName,
       imageURL: data.imageURL,
-      captain: userData,
-      participants: await returnParticipants(data.participants),
-      requestedParticipants: await returnParticipants(data.requestedParticipants),
+      // captain: data.captain,
+      participants: data.participants,
     };
     formattedTeams.push(team);
   }
