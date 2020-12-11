@@ -5,9 +5,9 @@ const db = require('./app/models');
 const path = require('path');
 
 const app = express();
-
+//http://localhost:8081
 var corsOptions = {
-  origin: 'http://localhost:8081',
+  origin: '*',
 };
 
 db.mongoose
