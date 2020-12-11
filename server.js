@@ -45,7 +45,7 @@ app.use('/images', express.static(path.join('app/files/images')));
 
 // simple route
 app.get('/', (req, res) => {
-  res.json({ message: 'api loaded succesfully' });
+  res.json({ message: 'api loaded succesfully yeah :)' });
 });
 
 // First User, other tables may depend on this table

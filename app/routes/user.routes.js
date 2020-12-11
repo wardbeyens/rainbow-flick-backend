@@ -13,7 +13,12 @@ module.exports = (app) => {
   router.post('/authenticate', users.authenticate);
 
   // Create a new admin
-  router.post('/admin', [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')], users.createAdmin);
+  router.post(
+    '/admin',
+    [authJwt.verifyToken, authJwt.hasPermission('ADMIN_CREATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    users.createAdmin
+  );
 
   // Retrieve all users
   router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findAll);
@@ -22,7 +27,12 @@ module.exports = (app) => {
   router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('USER_READ')], users.findOne);
 
   // Update a single user with id
-  router.put('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_UPDATE')], users.update);
+  router.put(
+    '/:id',
+    [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_UPDATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    users.update
+  );
 
   // Delete a user with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermissionOrIsUserItself('USER_DELETE')], users.delete);
