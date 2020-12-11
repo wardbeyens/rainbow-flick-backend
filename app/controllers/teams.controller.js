@@ -5,13 +5,18 @@ const User = db.users;
 
 returnUser = async (id) => {
   const data = await User.findById(id);
-  return {
-    id: data._id || data.id,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    email: data.email,
-    imageURL: data.imageURL,
-  };
+  if (!data) {
+    return { id: id };
+  } else {
+    return {
+      id: data._id || data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      imageURL: data.imageURL,
+      dateOfBirth: data.dateOfBirth
+    };
+  }
 };
 
 returnParticipants = async (originalParticipantsList) => {
