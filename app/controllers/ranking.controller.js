@@ -42,7 +42,7 @@ exports.getRankingTeams = async (req, res) => {
         scoresTeams.push({ team: teams[i]._id, teamName: teams[i].name, score: score });
       }
       scoresTeams.sort(compare);
-      return res.send(await returnTeam(scoresTeams));
+      return res.send(await scoresTeams);
     }
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving teams' });
