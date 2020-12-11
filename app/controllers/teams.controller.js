@@ -76,7 +76,6 @@ returnTeams = async (d) => {
 };
 
 exports.create = async (req, res) => {
-  // Create a user
   let team = new Team({
     name: req.body.name,
     location: req.body.location,
@@ -84,8 +83,10 @@ exports.create = async (req, res) => {
     captain: req.authUser.id,
   });
 
-  if (req.body.imageURL) {
-    team.imageURL = req.body.imageURL;
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+
+  if (imageFilePaths[0]) {
+    team.imageURL = imageFilePaths[0];
   } else {
     team.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
@@ -265,6 +266,10 @@ exports.leave = async (req, res) => {
   let participants = response.participants;
   let requestedParticipants = response.requestedParticipants;
 
+  if (response.captain._id == userID) {
+    res.status(400).send({ message: 'Damnit seg laat u team is niet in de steek captain!' });
+  }
+
   if (requestedParticipants.includes(userID) || participants.includes(userID)) {
     requestedParticipants = requestedParticipants.filter((value, index, arr) => {
       return value.toString() !== userID.toString();
@@ -289,7 +294,12 @@ exports.leave = async (req, res) => {
       message: 'Error updating team with id=' + id,
     });
   }
-  let teamFormatted = await returnTeam(response);
+  let teamFormatted = {};
+  try {
+    teamFormatted = await returnTeam(response);
+  } catch (err) {
+    return res.status(500).send({ message: err.message || 'Error idk why zoek het zelf maar uit' });
+  }
   return res.send(teamFormatted);
 };
 
