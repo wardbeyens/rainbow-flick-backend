@@ -369,3 +369,15 @@ exports.findOneLocal = async (id) => {
   }
   return returnTeamLocal(response);
 };
+
+exports.findMemberOf = async (req, res) => {
+  let id = req.body.id;
+  let response;
+  try {
+    response = await Team.find({ participants: id });
+  } catch (err) {
+    return res.status(500).send({ message: err.message || 'Error retrieving teams' });
+  }
+
+  return res.send(await returnTeams(response));
+};
