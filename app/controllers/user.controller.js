@@ -126,9 +126,9 @@ returnUserLimitedLocal = (data) => {
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
-    dateOfBirth: data.dateOfBirth,
-    imageURL: data.imageURL,
-    permissions: data.permissions,
+    // dateOfBirth: data.dateOfBirth,
+    // imageURL: data.imageURL,
+    // permissions: data.permissions,
   };
 };
 
