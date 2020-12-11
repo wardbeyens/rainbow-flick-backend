@@ -28,7 +28,7 @@ getPlayers = async (players) => {
     let originalPlayer = players[i];
     let player = {};
     player.user = await UserController.findOneLocal(originalPlayer.user);
-    player.team = originalPlayer.team;
+    player.teamID = originalPlayer.team;
 
     returnPlayers.push(player);
   }
@@ -174,8 +174,8 @@ exports.findAll = async (req, res) => {
     });
 };
 exports.findAllMatchesWithAuthUser = async (req, res) => {
-  let teams =await TeamController.findMemberOfLocal(req.authUser._id)
-  Match.find({ $or: [{ homeTeam: {$in:teams} }, { awayTeam: {$in:teams} }] })
+  let teams = await TeamController.findMemberOfLocal(req.authUser._id);
+  Match.find({ $or: [{ homeTeam: { $in: teams } }, { awayTeam: { $in: teams } }] })
     .then(async (data) => {
       return res.send(await returnMatches(data));
     })
@@ -518,8 +518,9 @@ exports.leave = async (req, res) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
-        console.log(data.dateTimeStart !== undefined);
-        if (data.dateTimeStart !== undefined) {
+        console.log(data.dateTimeStart);
+        console.log(data.dateTimeStart === undefined);
+        if (data.dateTimeStart === undefined) {
           console.log('in if');
           let userid = req.authUser._id;
           console.log('userid : ' + userid);
@@ -544,6 +545,8 @@ exports.leave = async (req, res) => {
           //       message: err.message || 'Some error occurred while creating the match.',
           //     });
           //   });
+        } else {
+          return res.status(400).send({ message: 'can not leave match because it already started ' + id });
         }
       }
     })
