@@ -6,30 +6,43 @@ const Score = db.score;
 const Team = db.team;
 
 queryMatchesTeam = async (team) => {
-    return await Match.find({ $or: [{ homeTeam: team }, { awayTeam: team }] })
-      .exec();
-  };
+  return await Match.find({ $or: [{ homeTeam: team }, { awayTeam: team }] }).exec();
+};
 
-exports.findAll = async (req, res) => {
+compare = (a, b) => {
+  if (a.score < b.score) {
+    return -1;
+  }
+  if (a.score > b.score) {
+    return 1;
+  }
+  return 0;
+};
+
+objs.sort(compare);
+
+exports.getRankingTeams = async (req, res) => {
   let teams;
   try {
     teams = await Team.find({});
     if (!teams) {
       return res.status(400).send({ message: 'No teams found' });
     } else {
-        let scoresTeams=[]
-        for(let i =0;i<teams.length;i++){
-            let matches = await queryMatchesTeam(teams[i]._id)
-            let score=0;
-            for(let j =0;j<matches.length;j++){
-                if(matches[j].homeTeam==teams[i]._id){
-                    score=score + matches[j].homeTeamPoints;
-                }else{
-                    score=score + matches[j].awayTeamPoints;
-                }
-            }
-            scoresTeams.push({team:teams[i]._id,score:score});
+      let scoresTeams = [];
+      for (let i = 0; i < teams.length; i++) {
+        let matches = await queryMatchesTeam(teams[i]._id);
+        let score = 0;
+        for (let j = 0; j < matches.length; j++) {
+          if (matches[j].homeTeam == teams[i]._id) {
+            score = score + matches[j].homeTeamPoints;
+          } else {
+            score = score + matches[j].awayTeamPoints;
+          }
         }
+        scoresTeams.push({ team: teams[i]._id, teamName: teams[i].name, score: score });
+      }
+      scoresTeams.sort(compare);
+      return res.send(await returnTeam(scoresTeams));
     }
   } catch (err) {
     return res.status(500).send({ message: err.message || 'Error retrieving teams' });
