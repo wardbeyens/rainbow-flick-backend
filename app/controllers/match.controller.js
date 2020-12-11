@@ -1,8 +1,10 @@
-const { team, match } = require('../models');
+const { team, match, table } = require('../models');
 const db = require('../models');
 const Match = db.match;
 const Score = db.score;
 const Team = db.team;
+const Table = db.table;
+
 // const Player = db.player;
 const TeamController = require('./teams.controller');
 const UserController = require('./user.controller');
@@ -432,11 +434,15 @@ exports.join = async (req, res) => {
       });
     } else {
       var players = match.players;
+      console.log('players ' + players);
+      console.log('user ' + user);
       let found = players
         .filter((m) => m.user.equals(user))
         .map((m) => {
           return m;
         });
+      console.log('found ' + found);
+      console.log('(found.length == 0) ' + (found.length == 0));
       if (found.length == 0) {
         Team.findById(match.homeTeam).then((ownTeam) => {
           if (!ownTeam) {
@@ -506,7 +512,7 @@ CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
       message: 'Er is iemand die deelneemt aan de wedstrijd dat niet in het team van de wedstrijd zit.',
     });
   }
-  if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= awayTeamCount) {
+  if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= minNumberPlayersPerTeam) {
     match.requirementsReached = true;
   }
   match
@@ -577,6 +583,18 @@ exports.start = async (req, res) => {
       } else {
         if (data.requirementsReached) {
           data.dateTimeStart = new Date();
+
+          Table.findById(data.table).then(async (table) => {
+            table.inUse = true;
+            Table.save(table)
+              .then(async (tableUpdated) => {})
+              .catch((err) => {
+                return res.status(500).send({
+                  message: err.message || 'Table could not be updated to inUse.',
+                });
+              });
+          });
+
           data
             .save(data)
             .then(async (data) => {
@@ -696,6 +714,18 @@ exports.end = async (req, res) => {
             data.homeTeamPoints = pointsEarnedHome;
             data.awayTeamPoints = pointsEarnedAway;
           }
+
+          Table.findById(data.table).then(async (table) => {
+            table.inUse = false;
+            Table.save(table)
+              .then(async (tableUpdated) => {})
+              .catch((err) => {
+                return res.status(500).send({
+                  message: err.message || 'Table could not be updated to inUse.',
+                });
+              });
+          });
+
           data
             .save(data)
             .then(async (data) => {
