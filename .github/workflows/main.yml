@@ -17,5 +17,5 @@ jobs:
           heroku_email: "wardbeyens99@gmail.com"
         env:
           HD_DB_HOST: ${{secrets.DB_HOST}}
-          HD_SECRET: ${{secrets.HD_SECRET}}
+          HD_SECRET: ${{secrets.SECRET}}
           HD_PORT: 80
