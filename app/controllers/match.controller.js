@@ -402,7 +402,7 @@ exports.challengeTeam = async (req, res) => {
 
 exports.join = async (req, res) => {
   let validationMessages = [];
-  if (!req.body.user) {
+  if (!req.authUser._id) {
     validationMessages.push('user id is vereist.');
   }
 
@@ -410,7 +410,7 @@ exports.join = async (req, res) => {
     return res.status(400).send({ messages: validationMessages });
   }
   const id = req.params.id;
-  const user = req.body.user;
+  const user = req.authUser._id;
 
   Match.findById(id).then((match) => {
     if (!match) {
@@ -420,7 +420,7 @@ exports.join = async (req, res) => {
     } else {
       var players = match.players;
       let found = players
-        .filter((m) => m.user.equals(userid))
+        .filter((m) => m.user.equals(user))
         .map((m) => {
           return m;
         });

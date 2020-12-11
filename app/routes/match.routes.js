@@ -21,6 +21,7 @@ module.exports = (app) => {
   router.get('/start/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.start);
   router.get('/end-match/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.end);
   router.get('/validate/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.validateMatch);
+  router.get('/join/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.join);
 
   // Update a match with id
   router.put('/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.update);
@@ -35,7 +36,6 @@ module.exports = (app) => {
   //router.delete('/:id', matches.delete);
   router.post('/challenge', [authJwt.verifyToken, authJwt.hasPermission('MATCH_CREATE')], matches.challengeTeam);
   //router.post('/challenge', matches.challengeTeam);
-  router.post('/join/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.join);
   //router.post('/join/:id', matches.join);
 
   app.use('/api/match', router);
