@@ -154,9 +154,12 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
   // console.log('month : ' + month);
   // console.log('day : ' + day);
   let gteDatum = new Date(year, month, day);
+  let ltDatum = new Date();
+  ltDatum.setDate(gteDatum.getDate() + 2);
+
   // console.log('gteDatum : ' + gteDatum);
-  day = day + 1;
-  let ltDatum = new Date(year, month, day);
+  // day = day + 1;
+  // let ltDatum = new Date(year, month, day);
   // console.log('ltDatum : ' + ltDatum);
 
   const query = Match.find();
@@ -175,9 +178,9 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
       .sort('dateTimePlanned')
       .limit(1)
       .exec();
-    // console.log(result);
+    console.log(result);
     if (!Object.keys(result).length) {
-      // console.log('niks bezig');
+      console.log('niks bezig');
       gteDatum = new Date();
       year = gteDatum.getFullYear();
       month = gteDatum.getMonth();
@@ -217,7 +220,7 @@ exports.overview = async (req, res) => {
         tablesWithMatches.push(table);
         // console.log('tables : ' + tables);
       }
-      console.log('tablesWithMatches : ' + tablesWithMatches);
+      console.log('tablesWithMatches : ' + JSON.stringify(tablesWithMatches));
       var responseObject = {
         date: datum,
         tables: tablesWithMatches,
