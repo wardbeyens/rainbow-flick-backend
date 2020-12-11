@@ -381,3 +381,14 @@ exports.findMemberOf = async (req, res) => {
 
   return res.send(await returnTeams(response));
 };
+
+exports.findMemberOfLocal = async (userId) => {
+  let id = userId;
+  let response;
+  try {
+    response = await Team.find({ participants: id });
+    return response;
+  } catch (err) {
+    return {};
+  }
+};
