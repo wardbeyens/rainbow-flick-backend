@@ -7,7 +7,7 @@ const path = require('path');
 const app = express();
 
 var corsOptions = {
-  origin: '*',
+  origin: 'http://localhost:8081',
 };
 
 db.mongoose
