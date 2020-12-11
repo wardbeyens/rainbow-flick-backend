@@ -19,7 +19,7 @@ module.exports = (app) => {
 
   router.get('/leave/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.leave);
   router.get('/start/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.start);
-  router.get('/end-match/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.end);
+  router.get('/end/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.end);
   router.get('/validate/:id', [authJwt.verifyToken, authJwt.hasPermissionMatchScore()], matches.validateMatch);
   router.get('/join/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_UPDATE')], matches.join);
 
