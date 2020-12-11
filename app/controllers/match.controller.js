@@ -174,7 +174,7 @@ exports.findAll = async (req, res) => {
     });
 };
 exports.findAllMatchesWithAuthUser = async (req, res) => {
-  Match.find({ 'players.user': req.authUser })
+  Match.find({ 'players.user': req.authUser._id })
     .then(async (data) => {
       return res.send(await returnMatches(data));
     })
