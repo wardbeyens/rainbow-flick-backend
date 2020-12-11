@@ -572,114 +572,104 @@ queryMatchesLast30Days = async (team) => {
 };
 exports.end = async (req, res) => {
   const id = req.params.id;
-  console.log('end macht');
+
   Match.findById(id)
     .then(async (data) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
-        data.dateTimeEnd = new Date();
+        if (data.dateTimeEnd == undefined) {
+          data.dateTimeEnd = new Date();
 
-        let homeTeam = data.homeTeam;
-        let awayTeam = data.awayTeam;
-        console.log('teams');
+          let homeTeam = data.homeTeam;
+          let awayTeam = data.awayTeam;
 
-        let matchesHome = await queryMatchesLast30Days(homeTeam);
-        let matchesAway = await queryMatchesLast30Days(awayTeam);
-        console.log('machesHome : ' + matchesHome);
-        console.log('machesHome : ' + matchesHome);
-        console.log('begin filter');
-        let homeTeamWonMatches = matchesHome.filter((m) => {
-          let score = m.score;
-          console.log('score');
-          if (score.length != 0) {
-            console.log('score if');
-            let finalScore = score[score.length - 1];
-            if (finalScore.scoreHome > finalScore.scoreAway) {
-              return m.homeTeam == homeTeam;
+          let matchesHome = await queryMatchesLast30Days(homeTeam);
+          let matchesAway = await queryMatchesLast30Days(awayTeam);
+
+          let homeTeamWonMatches = matchesHome.filter((m) => {
+            let score = m.score;
+
+            if (score.length != 0) {
+              let finalScore = score[score.length - 1];
+              if (finalScore.scoreHome > finalScore.scoreAway) {
+                return m.homeTeam == homeTeam;
+              } else {
+                return m.awayTeam == homeTeam;
+              }
             } else {
-              return m.awayTeam == homeTeam;
+              return false;
             }
-          } else {
-            return false;
-          }
-        });
-        console.log('homeTeamWonMatches filter done beginning awayTeamWonMatches filter');
-        let awayTeamWonMatches = matchesAway.filter((m) => {
-          let score = m.score;
-          console.log('score');
-          if (score.length != 0) {
-            console.log('score if');
-            let finalScore = score[score.length - 1];
-            if (finalScore.scoreHome > finalScore.scoreAway) {
-              return m.homeTeam == awayTeam;
-            } else {
-              return m.awayTeam == awayTeam;
-            }
-          } else {
-            return false;
-          }
-        });
-        console.log('filtert');
-
-        let ratingHomeTeam = homeTeamWonMatches.length / matchesHome.length;
-        let ratingAwayTeam = awayTeamWonMatches.length / matchesAway.length;
-        console.log('rating calculated');
-
-        let currentMatchsSCore = data.score[data.score.length - 1];
-        let homeTeamWon;
-        let awayTeamWon;
-        if (currentMatchsSCore !== undefined) {
-          if (currentMatchsSCore.scoreHome > currentMatchsSCore.scoreAway) {
-            homeTeamWon = true;
-            awayTeamWon = false;
-          } else if (currentMatchsSCore.scoreAway > currentMatchsSCore.scoreHome) {
-            awayTeamWon = true;
-            homeTeamWon = false;
-          } else {
-            awayTeamWon = false;
-            homeTeamWon = false;
-          }
-          console.log('who won');
-
-          baseScoreHome = homeTeamWon ? rewardScore.won : rewardScore.lost;
-          baseScoreAway = awayTeamWon ? rewardScore.won : rewardScore.lost;
-
-          if (Number.isNaN(ratingHomeTeam)) {
-            ratingHomeTeam = 0.5;
-          }
-          if (Number.isNaN(ratingAwayTeam)) {
-            ratingAwayTeam = 0.5;
-          }
-          if (matchesHome.length == 0) {
-            matchesHome.push({ name: 'machesHomeFiller' });
-          }
-          if (matchesAway.length == 0) {
-            matchesAway.push({ name: 'matchesAwayFiller' });
-          }
-          console.log('baseScoreHome : ' + baseScoreHome);
-          console.log('baseScoreAway : ' + baseScoreAway);
-          console.log('ratingHomeTeam : ' + ratingHomeTeam);
-          console.log('ratingAwayTeam : ' + ratingAwayTeam);
-          console.log('matchesHome.length : ' + matchesHome.length);
-          console.log('matchesAway.length : ' + matchesAway.length);
-          let pointsEarnedHome = (1 + ratingAwayTeam) * baseScoreHome * (matchesHome.length * 0.01);
-          let pointsEarnedAway = (1 + ratingHomeTeam) * baseScoreAway * (matchesAway.length * 0.01);
-          console.log('points');
-
-          data.homeTeamPoints = pointsEarnedHome;
-          data.awayTeamPoints = pointsEarnedAway;
-        }
-        data
-          .save(data)
-          .then(async (data) => {
-            return res.send(await returnMatch(data));
-          })
-          .catch((err) => {
-            return res.status(500).send({
-              message: err.message || 'Some error occurred while creating the match.',
-            });
           });
+
+          let awayTeamWonMatches = matchesAway.filter((m) => {
+            let score = m.score;
+
+            if (score.length != 0) {
+              let finalScore = score[score.length - 1];
+              if (finalScore.scoreHome > finalScore.scoreAway) {
+                return m.homeTeam == awayTeam;
+              } else {
+                return m.awayTeam == awayTeam;
+              }
+            } else {
+              return false;
+            }
+          });
+
+          let ratingHomeTeam = homeTeamWonMatches.length / matchesHome.length;
+          let ratingAwayTeam = awayTeamWonMatches.length / matchesAway.length;
+
+          let currentMatchsSCore = data.score[data.score.length - 1];
+          let homeTeamWon;
+          let awayTeamWon;
+          if (currentMatchsSCore !== undefined) {
+            if (currentMatchsSCore.scoreHome > currentMatchsSCore.scoreAway) {
+              homeTeamWon = true;
+              awayTeamWon = false;
+            } else if (currentMatchsSCore.scoreAway > currentMatchsSCore.scoreHome) {
+              awayTeamWon = true;
+              homeTeamWon = false;
+            } else {
+              awayTeamWon = false;
+              homeTeamWon = false;
+            }
+
+            baseScoreHome = homeTeamWon ? rewardScore.won : rewardScore.lost;
+            baseScoreAway = awayTeamWon ? rewardScore.won : rewardScore.lost;
+
+            if (Number.isNaN(ratingHomeTeam)) {
+              ratingHomeTeam = 0.5;
+            }
+            if (Number.isNaN(ratingAwayTeam)) {
+              ratingAwayTeam = 0.5;
+            }
+            if (matchesHome.length == 0) {
+              matchesHome.push({ name: 'machesHomeFiller' });
+            }
+            if (matchesAway.length == 0) {
+              matchesAway.push({ name: 'matchesAwayFiller' });
+            }
+
+            let pointsEarnedHome = (1 + ratingAwayTeam) * baseScoreHome * (matchesHome.length * 0.01);
+            let pointsEarnedAway = (1 + ratingHomeTeam) * baseScoreAway * (matchesAway.length * 0.01);
+
+            data.homeTeamPoints = pointsEarnedHome;
+            data.awayTeamPoints = pointsEarnedAway;
+          }
+          data
+            .save(data)
+            .then(async (data) => {
+              return res.send(await returnMatch(data));
+            })
+            .catch((err) => {
+              return res.status(500).send({
+                message: err.message || 'Some error occurred while creating the match.',
+              });
+            });
+        } else {
+          return res.status(400).send({ message: 'Match already ended with id ' + id });
+        }
       }
     })
     .catch((err) => {
