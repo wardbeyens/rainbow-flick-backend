@@ -7,7 +7,12 @@ module.exports = (app) => {
   var router = require('express').Router();
 
   // Create a new user
-  router.post('/', [authJwt.verifyToken, authJwt.hasPermission('TEAM_CREATE')], multer({ storage: multerConfig.storage }).array('image'), teams.create);
+  router.post(
+    '/',
+    [authJwt.verifyToken, authJwt.hasPermission('TEAM_CREATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    teams.create
+  );
 
   // Retrieve all teams
   router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('TEAM_READ')], teams.findAll);
@@ -15,11 +20,18 @@ module.exports = (app) => {
   // Search team by name with a name param in the url
   router.get('/search', [authJwt.verifyToken, authJwt.hasPermission('TEAM_READ')], teams.findOneByName);
 
+  router.get('/memberof', [authJwt.verifyToken, authJwt.hasPermission('TEAM_READ')], teams.findMemberOf);
+
   // Retrieve a single team by id or name
   router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('TEAM_READ')], teams.findOne);
 
   // // Update a single user with id
-  router.put('/:id', [authJwt.verifyToken, authJwt.hasPermission('TEAM_UPDATE')], multer({ storage: multerConfig.storage }).array('image'), teams.update);
+  router.put(
+    '/:id',
+    [authJwt.verifyToken, authJwt.hasPermission('TEAM_UPDATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    teams.update
+  );
 
   // Delete a user with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermission('TEAM_DELETE')], teams.delete);
