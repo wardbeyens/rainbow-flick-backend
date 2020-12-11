@@ -64,8 +64,9 @@ returnTeams = async (d) => {
       location: data.location,
       companyName: data.companyName,
       imageURL: data.imageURL,
-      // captain: data.captain,
-      participants: data.participants,
+      captainID: data.captain,
+      participantIDs: data.participants,
+      requestedParticipantIDs: data.requestedParticipants,
     };
     formattedTeams.push(team);
   }
