@@ -434,15 +434,15 @@ exports.join = async (req, res) => {
       });
     } else {
       var players = match.players;
-      console.log('players ' + players);
-      console.log('user ' + user);
+      // console.log('players ' + players);
+      // console.log('user ' + user);
       let found = players
         .filter((m) => m.user.equals(user))
         .map((m) => {
           return m;
         });
-      console.log('found ' + found);
-      console.log('(found.length == 0) ' + (found.length == 0));
+      // console.log('found ' + found);
+      // console.log('(found.length == 0) ' + (found.length == 0));
       if (found.length == 0) {
         Team.findById(match.homeTeam).then((ownTeam) => {
           if (!ownTeam) {

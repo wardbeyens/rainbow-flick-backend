@@ -144,7 +144,6 @@ exports.delete = (req, res) => {
 };
 
 matchOnTable2 = async (table, dateTimePlanned, res) => {
-  console.log('matchOnTable');
   let datum = new Date(dateTimePlanned);
   let year = datum.getFullYear();
   let month = datum.getMonth();
@@ -155,7 +154,7 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
   // console.log('day : ' + day);
   let gteDatum = new Date(year, month, day);
   let ltDatum = new Date();
-  ltDatum.setDate(gteDatum.getDate() + 2);
+  ltDatum.setDate(gteDatum.getDate() + 1);
 
   // console.log('gteDatum : ' + gteDatum);
   // day = day + 1;
@@ -178,9 +177,7 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
       .sort('dateTimePlanned')
       .limit(1)
       .exec();
-    console.log(result);
     if (!Object.keys(result).length) {
-      console.log('niks bezig');
       gteDatum = new Date();
       year = gteDatum.getFullYear();
       month = gteDatum.getMonth();
@@ -196,7 +193,6 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
         .limit(1)
         .exec();
     }
-    console.log('result : ' + result);
     return result[0];
   } catch (error) {
     return res.status(400).send({
@@ -207,20 +203,16 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
 
 exports.overview = async (req, res) => {
   const datum = req.params.datum;
-  console.log('datum : ' + datum);
   Table.find()
     .then(async (data) => {
-      console.log(data);
       // console.log(data.length);
       let tablesWithMatches = [];
       for (var i = 0; i < data.length; i++) {
         let table = data[i].toObject();
         table.match = await matchOnTable2(data[i]._id, datum, res);
-        console.log('tables[i].match : ' + table.match);
         tablesWithMatches.push(table);
         // console.log('tables : ' + tables);
       }
-      console.log('tablesWithMatches : ' + JSON.stringify(tablesWithMatches));
       var responseObject = {
         date: datum,
         tables: tablesWithMatches,
