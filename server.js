@@ -53,6 +53,7 @@ require('./app/routes/user.routes')(app);
 require('./app/routes/table.routes')(app);
 require('./app/routes/team.routes')(app);
 require('./app/routes/match.routes')(app);
+require('./app/routes/ranking.routes')(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
