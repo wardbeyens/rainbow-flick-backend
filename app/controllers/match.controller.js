@@ -173,6 +173,17 @@ exports.findAll = async (req, res) => {
       });
     });
 };
+exports.findAllMatchesWithAuthUser = async (req, res) => {
+  Match.find({"players.user": req.authUser})
+    .then(async (data) => {
+      return res.send(await returnMatches(data));
+    })
+    .catch((err) => {
+      return res.status(500).send({
+        message: err.message || 'Some error occurred while retrieving matches.',
+      });
+    });
+};
 
 // Find a single match with an id
 exports.findOne = async (req, res) => {

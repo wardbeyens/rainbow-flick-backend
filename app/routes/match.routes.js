@@ -10,6 +10,8 @@ module.exports = (app) => {
   // Retrieve all matchs
   router.get('/all', [authJwt.verifyToken, authJwt.hasPermission('MATCH_READ')], matches.findAll);
   //router.get('/all', matches.findAll);
+  //router.get('/authUser',[authJwt.verifyToken, authJwt.hasPermission('MATCH_READ')],matches.findAllMatchesWithAuthUser);
+  router.get('/authUser', authJwt.verifyToken, matches.findAllMatchesWithAuthUser);
 
   // Retrieve a single match with id
   router.get('/:id', [authJwt.verifyToken, authJwt.hasPermission('MATCH_READ')], matches.findOne);
