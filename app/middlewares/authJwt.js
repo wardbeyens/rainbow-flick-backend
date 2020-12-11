@@ -99,24 +99,24 @@ hasPermissionOrIsUserItself = (permission) => {
   return (req, res, next) => {
     if (!isTokenPresent(req)) {
       return res.status(401).send({ message: 'No token provided!' });
-    }
-    let token = extractToken(req);
-    jwt.verify(token, config.secret, (err, decoded) => {
-      if (err) {
-        return res.status(403).send({ message: 'Access denied.' });
-      }
-      if (req.params.id == decoded.id) {
-        next();
-      }
-      User.findById(decoded.id).then((user) => {
-        req.authUser = user;
-        if (user.permissions.includes(permission)) {
-          next();
-        } else {
-          return res.status(403).send({ message: 'Route requires privileges' });
+    } else {
+      let token = extractToken(req);
+      jwt.verify(token, config.secret, (err, decoded) => {
+        if (err) {
+          return res.status(403).send({ message: 'Access denied.' });
         }
+        User.findById(decoded.id).then((user) => {
+          req.authUser = user;
+          if (user._id == req.params.id) {
+            next();
+          } else if (user.permissions.includes(permission)) {
+            next();
+          } else {
+            return res.status(403).send({ message: 'Route requires privileges' });
+          }
+        });
       });
-    });
+    }
   };
 };
 
