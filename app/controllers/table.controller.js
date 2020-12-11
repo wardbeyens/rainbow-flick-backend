@@ -1,6 +1,7 @@
 const db = require('../models');
 const Table = db.table;
 const Match = db.match;
+const MatchController = require('./match.controller');
 
 //helper function to return userObject
 returnTable = (data) => {
@@ -142,7 +143,6 @@ exports.delete = (req, res) => {
       });
     });
 };
-
 matchOnTable2 = async (table, dateTimePlanned, res) => {
   let datum = new Date(dateTimePlanned);
   let year = datum.getFullYear();
@@ -193,7 +193,11 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
         .limit(1)
         .exec();
     }
-    return result[0];
+    if (!Object.keys(result).length) {
+      return result[0];
+    } else {
+      return await MatchController.returnMatchObject(result[0]);
+    }
   } catch (error) {
     return res.status(400).send({
       message: 'Error when searching for matches on table : ' + table,
@@ -208,7 +212,7 @@ exports.overview = async (req, res) => {
       // console.log(data.length);
       let tablesWithMatches = [];
       for (var i = 0; i < data.length; i++) {
-        let table = data[i].toObject();
+        let table = await returnTable(data[i].toObject());
         table.match = await matchOnTable2(data[i]._id, datum, res);
         tablesWithMatches.push(table);
         // console.log('tables : ' + tables);

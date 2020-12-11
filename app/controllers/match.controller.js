@@ -36,7 +36,7 @@ getPlayers = async (players) => {
   }
   return returnPlayers;
 };
-returnMatchObject = async (data) => {
+exports.returnMatchObject = async (data) => {
   return {
     id: data._id || data.id,
     name: data.name,
