@@ -174,7 +174,7 @@ exports.findAll = async (req, res) => {
     });
 };
 exports.findAllMatchesWithAuthUser = async (req, res) => {
-  Match.find({"players.user": req.authUser})
+  Match.find({ 'players.user': req.authUser })
     .then(async (data) => {
       return res.send(await returnMatches(data));
     })
@@ -328,7 +328,10 @@ matchOnTable = async (table, dateTimePlanned) => {
     return true;
   }
 };
-
+userInHomeTeam = async (userid, teamid) => {
+  let team = await Team.findById(teamid);
+  return team.participants.includes(userid);
+};
 exports.challengeTeam = async (req, res) => {
   let validationMessages = [];
   if (!req.body.homeTeam) {
@@ -345,6 +348,15 @@ exports.challengeTeam = async (req, res) => {
   }
   if (await matchOnTable(req.body.table, req.body.dateTimePlanned)) {
     validationMessages.push('Er is al een match bezig of gaat beginnen.');
+  }
+  if (!(await userInHomeTeam(req.authUser._id, req.body.homeTeam))) {
+    validationMessages.push('de gebruiker zit niet in het homeTeam.');
+  }
+  if (req.body.awayTeam === req.body.homeTeam) {
+    validationMessages.push('awayTeam and homeTeam zijn hetzelfde');
+  }
+  if (new Date() < req.body.dateTimePlanned) {
+    validationMessages.push('de wedstrijd moet in de toekomst gepland zijn');
   }
   if (validationMessages.length != 0) {
     return res.status(400).send({ messages: validationMessages });
