@@ -84,9 +84,19 @@ storeUserInDatabase = (user, res) => {
 
 //helper function to create a token
 createToken = (user) => {
-  return jwt.sign({ id: user._id || user.id, permissions: user.permissions }, config.secret, {
-    expiresIn: 86400, // 24 hours
-  });
+  return jwt.sign(
+    {
+      id: user._id || user.id,
+      permissions: user.permissions,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      imageURL: imageURL,
+    },
+    config.secret,
+    {
+      expiresIn: 86400, // 24 hours
+    }
+  );
 };
 
 //helper function to return userObject
