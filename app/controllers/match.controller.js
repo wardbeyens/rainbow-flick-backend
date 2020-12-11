@@ -163,7 +163,11 @@ exports.create = async (req, res) => {
 };
 // Retrieve all matches from the database.
 exports.findAll = async (req, res) => {
-  Match.find()
+  let dateTimePlannedUperLimit = new Date();
+  dateTimePlannedUperLimit.setDate(dateTimePlannedUperLimit.getDate() - 1);
+
+  // Match.find().where("dateTimeStart").ne(null).where("dateTimePlanned").lt(dateTimePlannedUperLimit)
+  Match.find({ $or: [{ dateTimeStart: { $ne: null } }, { dateTimePlanned: { $gte: dateTimePlannedUperLimit } }] })
     .then(async (data) => {
       return res.send(await returnMatches(data));
     })
@@ -175,7 +179,15 @@ exports.findAll = async (req, res) => {
 };
 exports.findAllMatchesWithAuthUser = async (req, res) => {
   let teams = await TeamController.findMemberOfLocal(req.authUser._id);
-  Match.find({ $or: [{ homeTeam: { $in: teams } }, { awayTeam: { $in: teams } }] })
+  let dateTimePlannedUperLimit = new Date();
+  dateTimePlannedUperLimit.setDate(dateTimePlannedUperLimit.getDate() - 1);
+  // Match.find({ $or: [{ homeTeam: { $in: teams } }, { awayTeam: { $in: teams } }] })
+  Match.find({
+    $and: [
+      { $or: [{ homeTeam: { $in: teams } }, { awayTeam: { $in: teams } }] },
+      { $or: [{ dateTimeStart: { $ne: null } }, { dateTimePlanned: { $gte: dateTimePlannedUperLimit } }] },
+    ],
+  })
     .then(async (data) => {
       return res.send(await returnMatches(data));
     })
