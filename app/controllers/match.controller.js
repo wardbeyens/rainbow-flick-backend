@@ -56,6 +56,7 @@ exports.returnMatchObject2 = async (data) => {
     awayTeamPoints: data.awayTeamPoints,
   };
 };
+
 returnMatchObject = async (data) => {
   return {
     id: data._id || data.id,
@@ -441,11 +442,17 @@ exports.join = async (req, res) => {
     validationMessages.push('user id is vereist.');
   }
 
+  if (!req.body.teamID) {
+    validationMessages.push('teamID IS VEREIST !!!!!!!!!! (dus met welk team doet deze user mee aan de wedstrijd)');
+  }
+
   if (validationMessages.length != 0) {
     return res.status(400).send({ messages: validationMessages });
   }
   const id = req.params.id;
   const user = req.authUser._id;
+
+  const teamid = req.body.teamID;
 
   Match.findById(id).then((match) => {
     if (!match) {
@@ -461,49 +468,18 @@ exports.join = async (req, res) => {
         .map((m) => {
           return m;
         });
-      // console.log('found ' + found);
-      // console.log('(found.length == 0) ' + (found.length == 0));
       if (found.length == 0) {
-        Team.findById(match.homeTeam).then((ownTeam) => {
-          if (!ownTeam) {
-            return res.status(400).send({
-              message: `Cannot update match with id=${id}. Because HomeTeam was not found!`,
-            });
-          } else {
-            found = ownTeam.participants.map((p) => {
-              if (p.user === user) {
-                return true;
-              }
-            });
-            if (found.length == 0) {
-              Team.findById(match.awayTeam).then((awayTeam) => {
-                if (!awayTeam) {
-                  return res.status(400).send({
-                    message: `Cannot update match with id=${id}. Because AwayTeam was not found!`,
-                  });
-                } else {
-                  found = awayTeam.participants.map((p) => {
-                    if (p.user === user) {
-                      return true;
-                    }
-                  });
-                  if (found.length == 0) {
-                    return res.status(500).send({
-                      message:
-                        err.message || 'de gebruiker is niet gevonden in de teams die deelenemen aan de wedstrijd.',
-                    });
-                  } else {
-                    match.players.push({ user: user, team: awayTeam });
-                    CheckRequirementsReachedAndSaveMatch(match, req, res);
-                  }
-                }
-              });
-            } else {
-              match.players.push({ user: user, team: ownTeam });
-              CheckRequirementsReachedAndSaveMatch(match, req, res);
-            }
-          }
-        });
+        if (teamid == match.homeTeam.toString()) {
+          match.players.push({ user: user, team: teamid });
+          CheckRequirementsReachedAndSaveMatch(match, req, res);
+        } else if (teamid == match.awayTeam.toString()) {
+          match.players.push({ user: user, team: teamid });
+          CheckRequirementsReachedAndSaveMatch(match, req, res);
+        } else {
+          return res.status(500).send({
+            message: err.message || 'de gebruiker is niet gevonden in de teams die deelenemen aan de wedstrijd.',
+          });
+        }
       } else {
         return res.status(500).send({
           message: 'de gebruiker neemt al deel aan de wedstrijd.',
@@ -531,20 +507,23 @@ CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
     return res.status(500).send({
       message: 'Er is iemand die deelneemt aan de wedstrijd dat niet in het team van de wedstrijd zit.',
     });
-  }
-  if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= minNumberPlayersPerTeam) {
-    match.requirementsReached = true;
-  }
-  match
-    .save(match)
-    .then(async (data) => {
-      return res.send(await returnMatch(data));
-    })
-    .catch((err) => {
-      return res.status(500).send({
-        message: err.message || 'Some error occurred while creating the match.',
+  } else {
+    if (ownTeamCount >= minNumberPlayersPerTeam && awayTeamCount >= minNumberPlayersPerTeam) {
+      match.requirementsReached = true;
+    } else {
+      match.requirementsReached = false;
+    }
+    match
+      .save(match)
+      .then(async (data) => {
+        return res.send(await returnMatch(data));
+      })
+      .catch((err) => {
+        return res.status(500).send({
+          message: err.message || 'Some error occurred while creating the match.',
+        });
       });
-    });
+  }
 };
 
 exports.leave = async (req, res) => {
@@ -647,6 +626,7 @@ queryMatchesLast30Days = async (team) => {
     .gt(date)
     .exec();
 };
+
 exports.end = async (req, res) => {
   const id = req.params.id;
 
@@ -655,6 +635,7 @@ exports.end = async (req, res) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
+        console.log(data);
         if (data.dateTimeEnd == undefined) {
           data.dateTimeEnd = new Date();
 
@@ -780,7 +761,7 @@ exports.validateMatch = async (req, res) => {
 
   Match.findById(id)
     .then(async (data) => {
-      console.log(data);
+      // console.log(data);
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
