@@ -208,8 +208,6 @@ exports.update = async (req, res) => {
 
   if (imageFilePaths[0]) {
     team.imageURL = imageFilePaths[0];
-  } else {
-    team.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
   }
 
   const id = req.params.id;
