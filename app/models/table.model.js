@@ -9,7 +9,7 @@ module.exports = (mongoose) => {
         contactName: String,
         contactPhone: String,
         description: { type: String, required: true },
-        inUse: Boolean,
+        inUse: { type: Boolean, default: false },
       },
       { timestamps: true }
     )
