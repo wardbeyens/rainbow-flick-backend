@@ -36,7 +36,27 @@ getPlayers = async (players) => {
   }
   return returnPlayers;
 };
-exports.returnMatchObject = async (data) => {
+exports.returnMatchObject2 = async (data) => {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    dateTimePlanned: data.dateTimePlanned,
+    dateTimeStart: data.dateTimeStart,
+    dateTimeEnd: data.dateTimeEnd,
+    homeTeam: await TeamController.findOneLocal(data.homeTeam),
+    awayTeam: await TeamController.findOneLocal(data.awayTeam),
+    players: await getPlayers(data.players),
+    score: data.score,
+    table: data.table,
+    scoreSubmittedBy: data.scoreSubmittedBy,
+    scoreValidated: data.scoreValidated,
+    requirementsReached: data.requirementsReached,
+    matchType: data.matchType,
+    homeTeamPoints: data.homeTeamPoints,
+    awayTeamPoints: data.awayTeamPoints,
+  };
+};
+returnMatchObject = async (data) => {
   return {
     id: data._id || data.id,
     name: data.name,
