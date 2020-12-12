@@ -14,7 +14,7 @@ returnUser = async (id) => {
       lastName: data.lastName,
       email: data.email,
       imageURL: data.imageURL,
-      dateOfBirth: data.dateOfBirth
+      dateOfBirth: data.dateOfBirth,
     };
   }
 };
