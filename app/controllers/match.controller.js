@@ -390,7 +390,7 @@ exports.challengeTeam = async (req, res) => {
   if (req.body.awayTeam === req.body.homeTeam) {
     validationMessages.push('awayTeam and homeTeam zijn hetzelfde');
   }
-  if (new Date() < req.body.dateTimePlanned) {
+  if (new Date() >= new Date(req.body.dateTimePlanned)) {
     validationMessages.push('de wedstrijd moet in de toekomst gepland zijn');
   }
   if (validationMessages.length != 0) {
