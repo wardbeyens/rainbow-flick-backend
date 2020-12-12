@@ -658,6 +658,13 @@ exports.end = async (req, res) => {
         if (data.dateTimeEnd == undefined) {
           data.dateTimeEnd = new Date();
 
+          let player = players
+            .filter((m) => m.user.equals(userid))
+            .map((m) => {
+              return m;
+            });
+          data.scoreSubmittedBy = player.teamID;
+
           let homeTeam = data.homeTeam;
           let awayTeam = data.awayTeam;
 
@@ -788,9 +795,8 @@ exports.validateMatch = async (req, res) => {
             .map((m) => {
               return m;
             });
-          if (player[0].team.equals(data.awayTeam)) {
+          if (!player[0].team.equals(data.scoreSubmittedBy)) {
             data.scoreValidated = true;
-            data.scoreSubmittedBy = userid;
             data
               .save(data)
               .then(async (data) => {
@@ -804,7 +810,11 @@ exports.validateMatch = async (req, res) => {
           } else {
             return res
               .status(400)
-              .send({ message: 'can not validate because the user is not from the opposite team for match : ' + id });
+              .send({
+                message:
+                  'can not validate because the user is not from the opposite team that submitted the score for this match with id: ' +
+                  id,
+              });
           }
         } else {
           return res.status(400).send({ message: 'match cannot be validated : ' + id });

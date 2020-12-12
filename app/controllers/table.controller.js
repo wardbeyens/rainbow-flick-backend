@@ -194,14 +194,12 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
         .exec();
     }
     if (!Object.keys(result).length) {
-      return result[0];
+      return ;
     } else {
       return await MatchController.returnMatchObject2(result[0]);
     }
   } catch (error) {
-    return res.status(400).send({
-      message: 'Error when searching for matches on table : ' + table,
-    });
+    console.log('error : ' + error);
   }
 };
 
@@ -214,13 +212,17 @@ exports.overview = async (req, res) => {
       for (var i = 0; i < data.length; i++) {
         let table = await returnTable(data[i].toObject());
         table.match = await matchOnTable2(data[i]._id, datum, res);
+        // if (Object.keys(matchTemp).length !== 0) {
+        //   = matchTemp;
+        // }
         tablesWithMatches.push(table);
-        // console.log('tables : ' + tables);
+        //console.log('tables : ' + tables);
       }
       var responseObject = {
         date: datum,
         tables: tablesWithMatches,
       };
+      //console.log('before sent : ');
       return res.send({ result: responseObject });
     })
     .catch((err) => {
