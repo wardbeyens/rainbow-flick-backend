@@ -196,7 +196,7 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
     if (!Object.keys(result).length) {
       return result[0];
     } else {
-      return await MatchController.returnMatchObject(result[0]);
+      return await MatchController.returnMatchObject2(result[0]);
     }
   } catch (error) {
     return res.status(400).send({
