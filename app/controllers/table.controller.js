@@ -5,7 +5,6 @@ const MatchController = require('./match.controller');
 
 //helper function to return userObject
 returnTable = (data) => {
-  console.log(data);
   return {
     id: data._id || data.id,
     name: data.name,
@@ -144,19 +143,22 @@ exports.delete = (req, res) => {
     });
 };
 matchOnTable2 = async (table, dateTimePlanned, res) => {
+  console.log('dateTimePlanned' + dateTimePlanned);
   let datum = new Date(dateTimePlanned);
   let year = datum.getFullYear();
   let month = datum.getMonth();
   let day = datum.getDate();
-  // console.log('datum : ' + datum);
-  // console.log('year : ' + year);
-  // console.log('month : ' + month);
-  // console.log('day : ' + day);
-  let gteDatum = new Date(year, month, day);
+  let hour = datum.getDate();
+  let minutes = datum.getDate();
+  console.log('datum : ' + datum);
+  console.log('year : ' + year);
+  console.log('month : ' + month);
+  console.log('day : ' + day);
+  let gteDatum = new Date(year, month, day, hour, minutes);
   let ltDatum = new Date();
-  ltDatum.setDate(gteDatum.getDate() + 2);
+  ltDatum.setDate(gteDatum.getDate() + 1);
 
-  // console.log('gteDatum : ' + gteDatum);
+  console.log('gteDatum : ' + gteDatum);
   // day = day + 1;
   // let ltDatum = new Date(year, month, day);
   // console.log('ltDatum : ' + ltDatum);
@@ -178,12 +180,17 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
       .limit(1)
       .exec();
     if (!Object.keys(result).length) {
-      gteDatum = new Date();
-      year = gteDatum.getFullYear();
-      month = gteDatum.getMonth();
-      day = gteDatum.getDate();
-      gteDatum = new Date(year, month, day);
-      result = await query
+      console.log(gteDatum);
+      console.log(ltDatum);
+      console.log(table);
+      // gteDatum = new Date();
+      // year = gteDatum.getFullYear();
+      // month = gteDatum.getMonth();
+      // day = gteDatum.getDate();
+      // gteDatum = new Date(year, month, day);
+      // console.log(gteDatum);
+      // console.log(ltDatum);
+      result = await Match.find()
         .where('table')
         .equals(table)
         .where('dateTimePlanned')
@@ -192,10 +199,14 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
         .sort('dateTimePlanned')
         .limit(1)
         .exec();
+      console.log('result ; ' + result);
     }
+    console.log('test1');
     if (!Object.keys(result).length) {
-      return ;
+      console.log('test2');
+      return;
     } else {
+      console.log('test3');
       return await MatchController.returnMatchObject2(result[0]);
     }
   } catch (error) {
