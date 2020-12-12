@@ -84,7 +84,7 @@ exports.create = async (req, res) => {
     name: req.body.name,
     location: req.body.location,
     companyName: req.body.companyName,
-    captain: req.authUser.id,
+    captain: req.body.captainID,
   });
 
   const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
@@ -96,6 +96,7 @@ exports.create = async (req, res) => {
   }
 
   let response;
+
   try {
     response = await Team.find({
       name: req.body.name,
@@ -106,7 +107,7 @@ exports.create = async (req, res) => {
     });
   }
 
-  team.participants = [req.authUser.id];
+  team.participants = [req.body.captainID];
 
   if (response.length !== 0) {
     return res.status(400).send({ message: `Already exists a Team with this name: ${team.name}` });
@@ -185,18 +186,50 @@ exports.update = async (req, res) => {
     });
   }
 
+  let team = {};
+
+  if (req.body.name) {
+    team.name = req.body.name;
+  }
+
+  if (req.body.location) {
+    team.location = req.body.location;
+  }
+
+  if (req.body.companyName) {
+    team.companyName = req.body.companyName;
+  }
+
+  if (req.body.captain) {
+    team.captain = req.body.captainID;
+  }
+
+  const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+
+  if (imageFilePaths[0]) {
+    team.imageURL = imageFilePaths[0];
+  } else {
+    team.imageURL = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+  }
+
   const id = req.params.id;
 
   let response;
   try {
-    response = await Team.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false });
+    response = await Team.findByIdAndUpdate(id, team, { new: true, useFindAndModify: false });
   } catch (err) {
     return res.status(500).send({
       message: 'Error updating team with id=' + id,
     });
   }
-  let teamFormatted = await returnTeam(response);
-  return res.send(teamFormatted);
+  if (response) {
+    let teamFormatted = await returnTeam(response);
+    return res.send(teamFormatted);
+  } else {
+    return res.status(500).send({
+      message: 'Team is niet gevonden met id=' + id,
+    });
+  }
 };
 
 exports.join = async (req, res) => {
