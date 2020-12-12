@@ -104,4 +104,4 @@ dist
 .tern-port
 
 #uploaded images
-app/files/images
+# app/files/images
