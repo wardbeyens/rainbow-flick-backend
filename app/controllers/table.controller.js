@@ -148,11 +148,13 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
   let year = datum.getFullYear();
   let month = datum.getMonth();
   let day = datum.getDate();
+  let hour = datum.getDate();
+  let minutes = datum.getDate();
   console.log('datum : ' + datum);
   console.log('year : ' + year);
   console.log('month : ' + month);
   console.log('day : ' + day);
-  let gteDatum = new Date(year, month, day, 1, 00);
+  let gteDatum = new Date(year, month, day, hour, minutes);
   let ltDatum = new Date();
   ltDatum.setDate(gteDatum.getDate() + 1);
 
