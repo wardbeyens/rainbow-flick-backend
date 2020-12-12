@@ -43,9 +43,9 @@ exports.returnMatchObject2 = async (data) => {
     dateTimePlanned: data.dateTimePlanned,
     dateTimeStart: data.dateTimeStart,
     dateTimeEnd: data.dateTimeEnd,
-    homeTeam: await TeamController.findOneLocal(data.homeTeam),
-    awayTeam: await TeamController.findOneLocal(data.awayTeam),
-    players: await getPlayers(data.players),
+    homeTeam: data.homeTeam,
+    awayTeam: data.awayTeam,
+    players: data.players,
     score: data.score,
     table: data.table,
     scoreSubmittedBy: data.scoreSubmittedBy,
@@ -808,13 +808,11 @@ exports.validateMatch = async (req, res) => {
                 });
               });
           } else {
-            return res
-              .status(400)
-              .send({
-                message:
-                  'can not validate because the user is not from the opposite team that submitted the score for this match with id: ' +
-                  id,
-              });
+            return res.status(400).send({
+              message:
+                'can not validate because the user is not from the opposite team that submitted the score for this match with id: ' +
+                id,
+            });
           }
         } else {
           return res.status(400).send({ message: 'match cannot be validated : ' + id });
