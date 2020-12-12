@@ -146,7 +146,6 @@ validateMatchFields = async (req, res) => {
 };
 // Create and Save a new match
 exports.create = async (req, res) => {
-  console.log('start hier');
   let validationMessages = await validateMatchFields(req, res);
 
   if (validationMessages.length != 0) {
@@ -284,17 +283,16 @@ exports.delete = async (req, res) => {
 };
 
 exports.updateScore = async (req, res) => {
-  console.log(req.body);
-  console.log(req.body.scoreAway);
+  // console.log(req.body);
 
   let validationMessages = [];
-  if (!req.body.scoreHome) {
+  if (req.body.scoreHome == undefined) {
     validationMessages.push('ScoreHome is required.');
   }
   if (req.body.scoreAway == undefined) {
     validationMessages.push('ScoreAway is required.');
   }
-  if (!req.body.homeTeamScored) {
+  if (req.body.homeTeamScored == undefined) {
     validationMessages.push('HomeTeamScored is required.');
   }
 
@@ -583,16 +581,18 @@ exports.start = async (req, res) => {
         if (data.requirementsReached) {
           data.dateTimeStart = new Date();
 
-          Table.findById(data.table).then(async (table) => {
-            table.inUse = true;
-            Table.save(table)
-              .then(async (tableUpdated) => {})
-              .catch((err) => {
-                return res.status(500).send({
-                  message: err.message || 'Table could not be updated to inUse.',
-                });
-              });
-          });
+          let updatedTable;
+          try {
+            updatedTable = await Table.findByIdAndUpdate(
+              data.table,
+              { inUse: false },
+              { new: true, useFindAndModify: false }
+            );
+          } catch (err) {
+            return res.status(500).send({
+              message: 'Error updating with id=' + id,
+            });
+          }
 
           data
             .save(data)
@@ -617,6 +617,7 @@ exports.start = async (req, res) => {
       });
     });
 };
+
 queryMatchesLast30Days = async (team) => {
   let date = new Date();
   date.setDate(date.getDate() - 30);
@@ -629,22 +630,26 @@ queryMatchesLast30Days = async (team) => {
 
 exports.end = async (req, res) => {
   const id = req.params.id;
+  const userid = req.authUser._id;
 
   Match.findById(id)
     .then(async (data) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
-        console.log(data);
-        if (data.dateTimeEnd == undefined) {
+        // console.log(data);
+        if (!data.dateTimeEnd) {
           data.dateTimeEnd = new Date();
+
+          let players = data.players;
 
           let player = players
             .filter((m) => m.user.equals(userid))
             .map((m) => {
               return m;
             });
-          data.scoreSubmittedBy = player.teamID;
+
+          data.scoreSubmittedBy = player[0].team;
 
           let homeTeam = data.homeTeam;
           let awayTeam = data.awayTeam;
@@ -723,27 +728,34 @@ exports.end = async (req, res) => {
             data.awayTeamPoints = pointsEarnedAway;
           }
 
-          Table.findById(data.table).then(async (table) => {
-            table.inUse = false;
-            Table.save(table)
-              .then(async (tableUpdated) => {})
+          let updatedTable;
+          try {
+            updatedTable = await Table.findByIdAndUpdate(
+              data.table,
+              { inUse: false },
+              { new: true, useFindAndModify: false }
+            );
+          } catch (err) {
+            return res.status(500).send({
+              message: 'Error updating with id=' + id,
+            });
+          }
+          if (!updatedTable) {
+            return res.status(400).send({
+              message: `Cannot update table with id=${data.table}.`,
+            });
+          } else {
+            data
+              .save(data)
+              .then(async (data) => {
+                return res.send(await returnMatch(data));
+              })
               .catch((err) => {
                 return res.status(500).send({
-                  message: err.message || 'Table could not be updated to inUse.',
+                  message: err.message || 'Some error occurred while ending the match.',
                 });
               });
-          });
-
-          data
-            .save(data)
-            .then(async (data) => {
-              return res.send(await returnMatch(data));
-            })
-            .catch((err) => {
-              return res.status(500).send({
-                message: err.message || 'Some error occurred while creating the match.',
-              });
-            });
+          }
         } else {
           return res.status(400).send({ message: 'Match already ended with id ' + id });
         }
@@ -758,6 +770,7 @@ exports.end = async (req, res) => {
 
 exports.validateMatch = async (req, res) => {
   const id = req.params.id;
+  let userid = req.authUser._id;
 
   Match.findById(id)
     .then(async (data) => {
@@ -767,7 +780,6 @@ exports.validateMatch = async (req, res) => {
       } else {
         if (data.dateTimeEnd !== undefined && data.scoreValidated !== true) {
           console.log('datum');
-          let userid = req.authUser._id;
           console.log('userID : ' + userid);
           let players = data.players;
           console.log('players : ' + players);
