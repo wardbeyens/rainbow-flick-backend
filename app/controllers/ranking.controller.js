@@ -41,7 +41,14 @@ exports.getRankingTeams = async (req, res) => {
             }
           }
         }
-        scoresTeams.push({ team: teams[i]._id, teamName: teams[i].name, score: score });
+        scoresTeams.push({
+          teamId: teams[i]._id,
+          teamName: teams[i].name,
+          teamLocation: teams[i].location,
+          teamImageUrl: teams[i].imageURL,
+          teamCompanyName: teams[i].companyName,
+          score: score,
+        });
       }
       scoresTeams.sort(compare);
       return res.send({ results: await scoresTeams });
