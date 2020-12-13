@@ -721,8 +721,8 @@ exports.end = async (req, res) => {
               matchesAway.push({ name: 'matchesAwayFiller' });
             }
 
-            let pointsEarnedHome = (1 + ratingAwayTeam) * baseScoreHome * (matchesHome.length * 0.01);
-            let pointsEarnedAway = (1 + ratingHomeTeam) * baseScoreAway * (matchesAway.length * 0.01);
+            let pointsEarnedHome = (1 + ratingAwayTeam + matchesHome.length * 0.01) * baseScoreHome;
+            let pointsEarnedAway = (1 + ratingHomeTeam + matchesAway.length * 0.01) * baseScoreAway;
 
             data.homeTeamPoints = pointsEarnedHome;
             data.awayTeamPoints = pointsEarnedAway;
