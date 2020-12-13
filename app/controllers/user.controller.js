@@ -200,12 +200,12 @@ exports.authenticate = (req, res) => {
 
   // Email validation
   if (!req.body.email) {
-    validationMessages.push('Email is required.');
+    validationMessages.push('Email moet ingevuld zijn.');
   }
 
   //Last Name
   if (!req.body.password) {
-    validationMessages.push('Password is required.');
+    validationMessages.push('Password moet ingevuld zijn.');
   }
 
   // If request not valid, return messages
@@ -223,14 +223,14 @@ exports.authenticate = (req, res) => {
       }
 
       if (!user) {
-        return res.status(200).send({ error: 'Er is geen gebruiker gevonden met e-mailadres.' });
+        return res.status(200).send({ error: 'Er is geen gebruiker gevonden met het e-mailadres.' });
       }
 
       var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
 
       if (!passwordIsValid) {
         return res.send({
-          error: 'Hey bruh, wachtwoord vergeten? Want het klopt niet eh man!',
+          error: 'Het wachtwoord is verkeerd.',
         });
       }
 
