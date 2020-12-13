@@ -105,13 +105,24 @@ exports.update = (req, res) => {
 
   const id = req.params.id;
 
-  Table.findByIdAndUpdate(id, req.body, { new: true, useFindAndModify: false })
+  let table = req.body;
+
+  if (req.files) {
+    const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
+    if (imageFilePaths[0]) {
+      table.imageUrl = imageFilePaths[0];
+    }
+  }
+  Table.findByIdAndUpdate(id, table, { new: true, useFindAndModify: false })
     .then((data) => {
       if (!data) {
         return res.status(400).send({
           message: `Cannot update table with id=${id}. Maybe table was not found!`,
         });
-      } else return res.send({ result: returnTable(data) });
+      } else {
+        console.log(data);
+        return res.send({ result: returnTable(data) });
+      }
     })
     .catch((err) => {
       return res.status(500).send({
