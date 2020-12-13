@@ -49,13 +49,11 @@ exports.create = (req, res) => {
   });
   const imageFilePaths = req.files.map((file) => req.protocol + '://' + req.get('host') + '/images/' + file.filename);
   if (imageFilePaths[0]) {
-    console.log('1');
     table.imageUrl = imageFilePaths[0];
   } else {
-    console.log('2');
     table.imageUrl = 'https://cdn.discordapp.com/attachments/785566300721905714/787668520477523988/table.png';
   }
-  console.log(table);
+
   // Save table in the database
   table
     .save(table)
@@ -120,7 +118,6 @@ exports.update = (req, res) => {
           message: `Cannot update table with id=${id}. Maybe table was not found!`,
         });
       } else {
-        console.log(data);
         return res.send({ result: returnTable(data) });
       }
     })
@@ -154,25 +151,20 @@ exports.delete = (req, res) => {
     });
 };
 matchOnTable2 = async (table, dateTimePlanned, res) => {
-  console.log('dateTimePlanned' + dateTimePlanned);
   let datum = new Date(dateTimePlanned);
   let year = datum.getFullYear();
   let month = datum.getMonth();
   let day = datum.getDate();
   let hour = datum.getDate();
   let minutes = datum.getDate();
-  console.log('datum : ' + datum);
-  console.log('year : ' + year);
-  console.log('month : ' + month);
-  console.log('day : ' + day);
+
   let gteDatum = new Date(year, month, day, hour, minutes);
   let ltDatum = new Date();
   ltDatum.setDate(gteDatum.getDate() + 1);
 
-  console.log('gteDatum : ' + gteDatum);
   // day = day + 1;
   // let ltDatum = new Date(year, month, day);
-  // console.log('ltDatum : ' + ltDatum);
+  //
 
   const query = Match.find();
   let result;
@@ -191,16 +183,13 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
       .limit(1)
       .exec();
     if (!Object.keys(result).length) {
-      console.log(gteDatum);
-      console.log(ltDatum);
-      console.log(table);
       // gteDatum = new Date();
       // year = gteDatum.getFullYear();
       // month = gteDatum.getMonth();
       // day = gteDatum.getDate();
       // gteDatum = new Date(year, month, day);
-      // console.log(gteDatum);
-      // console.log(ltDatum);
+      //
+      //
       result = await Match.find()
         .where('table')
         .equals(table)
@@ -210,26 +199,21 @@ matchOnTable2 = async (table, dateTimePlanned, res) => {
         .sort('dateTimePlanned')
         .limit(1)
         .exec();
-      console.log('result ; ' + result);
     }
-    console.log('test1');
+
     if (!Object.keys(result).length) {
-      console.log('test2');
       return;
     } else {
-      console.log('test3');
       return await MatchController.returnMatchObject2(result[0]);
     }
-  } catch (error) {
-    console.log('error : ' + error);
-  }
+  } catch (error) {}
 };
 
 exports.overview = async (req, res) => {
   const datum = req.params.datum;
   Table.find()
     .then(async (data) => {
-      // console.log(data.length);
+      //
       let tablesWithMatches = [];
       for (var i = 0; i < data.length; i++) {
         let table = await returnTable(data[i].toObject());

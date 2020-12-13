@@ -15,11 +15,8 @@ db.mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
-    console.log('Connected to the database!');
-  })
+  .then(() => {})
   .catch((err) => {
-    console.log('Cannot connect to the database!', err);
     process.exit();
   });
 
@@ -32,8 +29,8 @@ app.use((err, req, res, next) => {
   // coming from any middleware, not just body-parser:
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     // console.error(err);
-    // console.log(req.body);
-    // console.log(res);
+    //
+    //
     return res.sendStatus(400); // Bad request
   }
   next();
@@ -59,6 +56,4 @@ require('./app/routes/image.routes')(app);
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+app.listen(PORT, () => {});
