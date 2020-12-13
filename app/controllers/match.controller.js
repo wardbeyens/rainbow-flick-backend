@@ -407,6 +407,7 @@ exports.challengeTeam = async (req, res) => {
             homeTeam: req.body.homeTeam,
             awayTeam: req.body.awayTeam,
             table: req.body.table,
+            players: [{ user: req.authUser._id, team: req.body.homeTeam }],
           });
 
           // Save match in the database
