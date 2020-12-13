@@ -20,7 +20,12 @@ module.exports = (app) => {
   router.get('/overview/:datum', [authJwt.verifyToken, authJwt.hasPermission('TABLE_READ')], tables.overview);
 
   // Update a table with id
-  router.put('/:id', [authJwt.verifyToken, authJwt.hasPermission('TABLE_UPDATE')], tables.update);
+  router.put(
+    '/:id',
+    [authJwt.verifyToken, authJwt.hasPermission('TABLE_UPDATE')],
+    multer({ storage: multerConfig.storage }).array('image'),
+    tables.update
+  );
 
   // Delete a table with id
   router.delete('/:id', [authJwt.verifyToken, authJwt.hasPermission('TABLE_DELETE')], tables.delete);
