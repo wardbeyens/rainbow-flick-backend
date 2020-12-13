@@ -223,7 +223,7 @@ exports.authenticate = (req, res) => {
       }
 
       if (!user) {
-        return res.status(200).send({ error: 'Er is geen gebruiker gevonden met het e-mailadres.' });
+        return res.status(200).send({ error: 'Er is geen gebruiker gevonden met dit e-mailadres.' });
       }
 
       var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
