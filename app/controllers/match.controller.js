@@ -172,13 +172,12 @@ exports.create = async (req, res) => {
     requirementsReached: req.body.requirementsReached,
     matchType: req.body.matchType,
   });
-  console.log('save match');
+
   // Save match in the database
 
   match
     .save(match)
     .then(async (data) => {
-      console.log('TEST TEST TEST');
       return res.send(await returnMatch(data));
     })
     .catch((err) => {
@@ -215,7 +214,6 @@ exports.findAllMatchesWithAuthUser = async (req, res) => {
     ],
   })
     .then(async (data) => {
-      console.log('tot hier');
       return res.send(await returnMatches(data));
     })
     .catch((err) => {
@@ -288,7 +286,7 @@ exports.delete = async (req, res) => {
 };
 
 exports.updateScore = async (req, res) => {
-  // console.log(req.body);
+  //
 
   let validationMessages = [];
   if (req.body.scoreHome == undefined) {
@@ -465,8 +463,8 @@ exports.join = async (req, res) => {
       });
     } else {
       var players = match.players;
-      // console.log('players ' + players);
-      // console.log('user ' + user);
+      //
+      //
       let found = players
         .filter((m) => m.user.equals(user))
         .map((m) => {
@@ -532,33 +530,29 @@ CheckRequirementsReachedAndSaveMatch = async (match, req, res) => {
 
 exports.leave = async (req, res) => {
   const id = req.params.id;
-  console.log('id : ' + id);
+
   Match.findById(id)
     .then(async (data) => {
-      console.log('data : ' + data);
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
-        console.log(data.dateTimeStart);
-        console.log(data.dateTimeStart === undefined);
         if (data.dateTimeStart === undefined) {
-          console.log('in if');
           let userid = req.authUser._id;
-          console.log('userid : ' + userid);
+
           var players = data.players;
-          console.log(players);
+
           let updatedPlayers = players
             .filter((m) => m.user.equals(userid))
             .map((m) => {
               return m;
             });
-          console.log(updatedPlayers);
+
           data.players = updatedPlayers;
           CheckRequirementsReachedAndSaveMatch(data, req, res);
           // data
           //   .save(data)
           //   .then(async (data) => {
-          //     console.log('saved');
+          //
           //     return res.send(await returnMatch(data));
           //   })
           //   .catch((err) => {
@@ -643,7 +637,7 @@ exports.end = async (req, res) => {
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
-        // console.log(data);
+        //
         if (!data.dateTimeEnd) {
           data.dateTimeEnd = new Date();
 
@@ -780,15 +774,13 @@ exports.validateMatch = async (req, res) => {
 
   Match.findById(id)
     .then(async (data) => {
-      // console.log(data);
+      //
       if (!data) {
         return res.status(400).send({ message: 'Not found match with id ' + id });
       } else {
         if (data.dateTimeEnd !== undefined && data.scoreValidated !== true) {
-          console.log('datum');
-          console.log('userID : ' + userid);
           let players = data.players;
-          console.log('players : ' + players);
+
           let player = players
             .filter((m) => m.user.equals(userid))
             .map((m) => {

@@ -19,7 +19,5 @@ exports.multer = (req, res) => {
 };
 
 exports.cloud = async (req, res, next) => {
-  cloudinary.v2.uploader.upload('../files/images/placeholder.png', function (error, result) {
-    console.log(result, error);
-  });
+  cloudinary.v2.uploader.upload('../files/images/placeholder.png', function (error, result) {});
 };
