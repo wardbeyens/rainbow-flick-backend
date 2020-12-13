@@ -53,7 +53,7 @@ exports.create = (req, res) => {
     table.imageUrl = imageFilePaths[0];
   } else {
     console.log('2');
-    table.imageUrl = 'https://rainbow-flick-backend-app.herokuapp.com/images/placeholder.png';
+    table.imageUrl = 'https://cdn.discordapp.com/attachments/785566300721905714/787668520477523988/table.png';
   }
   console.log(table);
   // Save table in the database
