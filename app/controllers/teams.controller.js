@@ -46,16 +46,20 @@ returnTeam = async (data) => {
 };
 
 returnTeamLocal = async (data) => {
-  return {
-    id: data._id || data.id,
-    name: data.name,
-    // location: data.location,
-    companyName: data.companyName,
-    imageURL: data.imageURL,
-    // captain: await returnUser(data.captain),
-    participants: data.participants,
-    // requestedParticipants: await returnParticipants(data.requestedParticipants),
-  };
+  if (data) {
+    return {
+      id: data._id || data.id,
+      name: data.name,
+      // location: data.location,
+      companyName: data.companyName,
+      imageURL: data.imageURL,
+      // captain: await returnUser(data.captain),
+      participants: data.participants,
+      // requestedParticipants: await returnParticipants(data.requestedParticipants),
+    };
+  } else {
+    return {};
+  }
 };
 
 returnTeams = async (d) => {
@@ -399,10 +403,10 @@ exports.findOneLocal = async (id) => {
   let response;
   try {
     response = await Team.findById(id);
+    return returnTeamLocal(response);
   } catch (err) {
-    return {};
+    return '';
   }
-  return returnTeamLocal(response);
 };
 
 exports.findMemberOf = async (req, res) => {
@@ -424,6 +428,6 @@ exports.findMemberOfLocal = async (userId) => {
     response = await Team.find({ participants: id });
     return response;
   } catch (err) {
-    return {};
+    return [];
   }
 };

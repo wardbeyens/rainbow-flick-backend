@@ -58,24 +58,28 @@ exports.returnMatchObject2 = async (data) => {
 };
 
 returnMatchObject = async (data) => {
-  return {
-    id: data._id || data.id,
-    name: data.name,
-    dateTimePlanned: data.dateTimePlanned,
-    dateTimeStart: data.dateTimeStart,
-    dateTimeEnd: data.dateTimeEnd,
-    homeTeam: await TeamController.findOneLocal(data.homeTeam),
-    awayTeam: await TeamController.findOneLocal(data.awayTeam),
-    players: await getPlayers(data.players),
-    score: data.score,
-    table: data.table,
-    scoreSubmittedBy: data.scoreSubmittedBy,
-    scoreValidated: data.scoreValidated,
-    requirementsReached: data.requirementsReached,
-    matchType: data.matchType,
-    homeTeamPoints: data.homeTeamPoints,
-    awayTeamPoints: data.awayTeamPoints,
-  };
+  if (data) {
+    return {
+      id: data._id || data.id,
+      name: data.name,
+      dateTimePlanned: data.dateTimePlanned,
+      dateTimeStart: data.dateTimeStart,
+      dateTimeEnd: data.dateTimeEnd,
+      homeTeam: await TeamController.findOneLocal(data.homeTeam),
+      awayTeam: await TeamController.findOneLocal(data.awayTeam),
+      players: await getPlayers(data.players),
+      score: data.score,
+      table: data.table,
+      scoreSubmittedBy: data.scoreSubmittedBy,
+      scoreValidated: data.scoreValidated,
+      requirementsReached: data.requirementsReached,
+      matchType: data.matchType,
+      homeTeamPoints: data.homeTeamPoints,
+      awayTeamPoints: data.awayTeamPoints,
+    };
+  } else {
+    return {};
+  }
 };
 //helper function to return matchObject
 returnMatch = async (data) => {
@@ -211,6 +215,7 @@ exports.findAllMatchesWithAuthUser = async (req, res) => {
     ],
   })
     .then(async (data) => {
+      console.log('tot hier');
       return res.send(await returnMatches(data));
     })
     .catch((err) => {
